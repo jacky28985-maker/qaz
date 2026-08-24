@@ -2517,6 +2517,493 @@ function updatePlanSliderValue(days, options = {}) {
   sliderValue.value = String(days);
 }
 
+function getBucketCompletion(bucket, state) {
+  const completed = bucket.tasks.filter((task) => state.completion.includes(task.word)).length;
+  return {
+    completed,
+    total: bucket.tasks.length,
+    done: completed >= bucket.tasks.length
+  };
+}
+
+function getActivePlanDay(state) {
+  const nextBucket = state.plan.find((bucket) => !getBucketCompletion(bucket, state).done);
+  return nextBucket?.day || null;
+}
+
+function startStudyDay(day, options = {}) {
+  const state = getState();
+  const bucket = state.plan.find((item) => item.day === day);
+  const activeDay = getActivePlanDay(state);
+  if (!bucket || !bucket.tasks.length) return;
+  if (activeDay && day > activeDay) return;
+
+  const shouldCreateFresh = !state.studySession
+    || state.studySession.bookId !== state.selectedBook?.id
+    || state.studySession.day !== day
+    || state.studySession.completed;
+
+  state.studySession = shouldCreateFresh
+    ? createStudySession(state.selectedBook.id, day, bucket.tasks)
+    : ensureStudyQuestion(state.studySession, state);
+
+  setState(state);
+
+  if (options.navigate === false) {
+    if (document.body.dataset.page === "study") renderStudy();
+    return;
+  }
+
+  go("study");
+}
+
+function createStudySession(bookId, day, tasks) {
+  const session = {
+    bookId,
+    day,
+    turn: 0,
+    answered: 0,
+    completed: false,
+    lastFeedback: null,
+    currentQuestion: null,
+    cards: tasks.map((task) => ({
+      word: task.word,
+      dueTurn: 0,
+      attempts: 0,
+      correctPasses: 0,
+      wrongCount: 0,
+      mastered: false
+    }))
+  };
+
+  return ensureStudyQuestion(session, getState());
+}
+
+function getStudyRequiredPasses(card) {
+  return 3 + Math.min(card.wrongCount, 3);
+}
+
+function ensureStudyQuestion(session, state) {
+  if (!session || session.completed || session.currentQuestion) return session;
+
+  const nextCard = selectNextStudyCard(session);
+  if (!nextCard) {
+    session.completed = true;
+    return session;
+  }
+
+  const nextType = STUDY_CARD_TYPES[session.turn % STUDY_CARD_TYPES.length];
+  session.currentQuestion = buildStudyQuestion(nextType, nextCard, state, session);
+  return session;
+}
+
+function selectNextStudyCard(session) {
+  const candidates = session.cards
+    .filter((card) => !card.mastered)
+    .sort((left, right) => left.dueTurn - right.dueTurn || left.correctPasses - right.correctPasses || left.wrongCount - right.wrongCount);
+
+  return candidates[0] || null;
+}
+
+function buildStudyQuestion(type, card, state, session) {
+  const studyCopy = getCopy().study;
+  const wordItem = findVocabularyItem(state, card.word);
+  const gloss = getWordGloss(card.word);
+  const poolWords = getStudyPoolWords(state, session.day, card.word);
+
+  if (type === "zh_to_en_choice") {
+    return {
+      type,
+      word: card.word,
+      gloss,
+      answer: card.word,
+      badge: studyCopy.typeLabels[type],
+      prompt: studyCopy.promptLabels[type],
+      headline: gloss,
+      subline: wordItem ? translate(getCopy().plan.taskMeta, wordItem) : "",
+      options: buildChoiceOptions(poolWords, card.word, (word) => word)
+    };
+  }
+
+  if (type === "en_to_zh_choice") {
+    return {
+      type,
+      word: card.word,
+      gloss,
+      answer: gloss,
+      badge: studyCopy.typeLabels[type],
+      prompt: studyCopy.promptLabels[type],
+      headline: card.word,
+      subline: wordItem ? translate(getCopy().plan.taskMeta, wordItem) : "",
+      options: buildChoiceOptions(poolWords, card.word, (word) => getWordGloss(word))
+    };
+  }
+
+  if (type === "zh_to_en_spell") {
+    return {
+      type,
+      word: card.word,
+      gloss,
+      answer: card.word,
+      badge: studyCopy.typeLabels[type],
+      prompt: studyCopy.promptLabels[type],
+      headline: gloss,
+      subline: wordItem ? translate(getCopy().plan.taskMeta, wordItem) : "",
+      inputPlaceholder: studyCopy.inputPlaceholder
+    };
+  }
+
+  return {
+    type,
+    word: card.word,
+    gloss,
+    answer: type === "scene_to_en_choice" ? card.word : gloss,
+    badge: studyCopy.typeLabels[type],
+    prompt: studyCopy.promptLabels[type],
+    visual: {
+      title: studyCopy.sceneTitle,
+      label: translate(studyCopy.sceneLabel, { gloss }),
+      hue: hashWord(card.word)
+    },
+    subline: wordItem ? translate(getCopy().plan.taskMeta, wordItem) : "",
+    options: buildChoiceOptions(
+      poolWords,
+      card.word,
+      (word) => type === "scene_to_en_choice" ? word : getWordGloss(word)
+    )
+  };
+}
+
+function buildChoiceOptions(poolWords, targetWord, labelGetter) {
+  const usedLabels = new Set([labelGetter(targetWord)]);
+  const optionWords = [targetWord];
+
+  shuffleArray(poolWords.filter((word) => word !== targetWord)).forEach((word) => {
+    if (optionWords.length >= 4) return;
+    const label = labelGetter(word);
+    if (usedLabels.has(label)) return;
+    usedLabels.add(label);
+    optionWords.push(word);
+  });
+
+  return shuffleArray(optionWords).map((word) => ({
+    word,
+    value: labelGetter(word),
+    correct: word === targetWord
+  }));
+}
+
+function getStudyPoolWords(state, day, currentWord) {
+  const dayWords = state.plan.find((bucket) => bucket.day === day)?.tasks.map((task) => task.word) || [];
+  const planWords = state.plan.flatMap((bucket) => bucket.tasks.map((task) => task.word));
+  const bookWords = state.selectedBook?.vocabulary?.map((item) => item.word) || [];
+  return [...new Set([currentWord, ...dayWords, ...planWords, ...bookWords])];
+}
+
+function findVocabularyItem(state, word) {
+  return state.selectedBook?.vocabulary?.find((item) => item.word === word) || null;
+}
+
+function getWordGloss(word) {
+  return WORD_GLOSSARY[word] || word;
+}
+
+function getStudyProgressRatio(session) {
+  if (!session.cards.length) return 0;
+  const progress = session.cards.reduce((total, card) => {
+    const required = getStudyRequiredPasses(card);
+    return total + Math.min(card.correctPasses / Math.max(required, 1), 1);
+  }, 0);
+
+  return progress / session.cards.length;
+}
+
+function renderPlan() {
+  const state = getState();
+  const planCopy = getCopy().plan;
+  const total = state.plan.flatMap((bucket) => bucket.tasks).length;
+  const selectedDays = state.planDays || 7;
+  const sliderMax = getPlanDayLimit(state);
+  const dailyWords = total ? Math.ceil(total / Math.max(selectedDays, 1)) : 0;
+  const dailyMinutes = estimateMinutesForWords(dailyWords);
+  const totalMinutes = estimateMinutesForWords(total);
+  const activeDay = getActivePlanDay(state);
+
+  const slider = document.getElementById("daysSlider");
+  const dayInput = document.getElementById("planSliderValue");
+  if (slider) {
+    slider.min = "1";
+    slider.max = String(sliderMax);
+    slider.value = String(clamp(selectedDays, 1, sliderMax));
+  }
+  if (dayInput) {
+    dayInput.min = "1";
+    dayInput.max = String(sliderMax);
+  }
+  renderPlanSliderScale(sliderMax);
+  updatePlanSliderValue(selectedDays, { force: true });
+  document.getElementById("planSliderHint").textContent = planCopy.sliderHint;
+  document.getElementById("planSummary").textContent = total
+    ? translate(planCopy.summary, {
+      days: selectedDays,
+      dailyWords,
+      dailyMinutes,
+      totalMinutes
+    })
+    : planCopy.summaryEmpty;
+
+  document.getElementById("planWordCount").textContent = String(total);
+  document.getElementById("planDayCount").textContent = String(selectedDays);
+  document.getElementById("planDailyWordCount").textContent = String(dailyWords);
+  document.getElementById("planDailyTime").textContent = translate(planCopy.minutes, { minutes: dailyMinutes });
+  document.getElementById("planRuleCopy").textContent = planCopy.rule;
+
+  const primaryStudyButton = document.getElementById("startTodayStudy");
+  if (primaryStudyButton) {
+    const isContinuing = !!state.studySession && !state.studySession.completed && state.studySession.day === activeDay;
+    primaryStudyButton.textContent = isContinuing ? planCopy.continueToday : planCopy.startToday;
+    primaryStudyButton.disabled = !activeDay;
+  }
+
+  const grid = document.getElementById("planGrid");
+  grid.innerHTML = state.plan.map((bucket) => {
+    const bucketStatus = getBucketCompletion(bucket, state);
+    const isActive = activeDay === bucket.day;
+    const isLocked = activeDay !== null && bucket.day > activeDay && !bucketStatus.done;
+    const isContinuing = !!state.studySession && !state.studySession.completed && state.studySession.day === bucket.day;
+    const badgeCopy = bucketStatus.done
+      ? planCopy.completedDay
+      : isActive
+        ? planCopy.activeDay
+        : planCopy.lockedDay;
+
+    return `
+      <div class="day-card ${isActive ? "day-card-active" : ""} ${bucketStatus.done ? "day-card-complete" : ""}">
+        <div class="day-head">
+          <div class="stack" style="gap: 6px;">
+            <strong>${escapeHtml(translate(planCopy.day, { day: bucket.day }))}</strong>
+            <span class="task-meta">${escapeHtml(translate(planCopy.progress, { done: bucketStatus.completed, total: bucketStatus.total }))}</span>
+          </div>
+          <div class="day-head-meta">
+            <span class="day-badge">${escapeHtml(translate(planCopy.count, { count: bucket.tasks.length }))}</span>
+            <span class="day-badge ${bucketStatus.done ? "day-badge-strong" : ""}">${escapeHtml(badgeCopy)}</span>
+          </div>
+        </div>
+        <div class="task-list">
+          ${bucket.tasks.map((task) => `
+            <div class="task ${state.completion.includes(task.word) ? "task-complete" : ""}">
+              <div class="task-top">
+                <strong>${task.word}</strong>
+                <span class="task-status-chip ${state.completion.includes(task.word) ? "task-status-chip-done" : ""}">
+                  ${escapeHtml(state.completion.includes(task.word) ? planCopy.done : getWordGloss(task.word))}
+                </span>
+              </div>
+              <p class="task-meta">${escapeHtml(translate(planCopy.taskMeta, {
+                chapter: task.chapter,
+                frequency: task.frequency,
+                difficulty: task.difficulty
+              }))}</p>
+            </div>
+          `).join("")}
+        </div>
+        <div class="button-row plan-day-actions">
+          ${isActive ? `
+            <button class="primary-btn" type="button" data-start-day="${bucket.day}">
+              ${escapeHtml(isContinuing ? planCopy.continueToday : planCopy.startToday)}
+            </button>
+          ` : ""}
+          ${isLocked ? `
+            <button class="ghost-btn" type="button" disabled>
+              ${escapeHtml(planCopy.lockedDay)}
+            </button>
+          ` : ""}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderStudy() {
+  const state = getState();
+  if (!state.studySession) {
+    go("plan");
+    return;
+  }
+
+  state.studySession = ensureStudyQuestion(state.studySession, state);
+  setState(state);
+
+  const session = state.studySession;
+  const studyCopy = getCopy().study;
+  const mastered = session.cards.filter((card) => card.mastered).length;
+  const left = session.cards.filter((card) => !card.mastered).length;
+  const progressPercent = Math.round(getStudyProgressRatio(session) * 100);
+
+  document.getElementById("studyTitle").textContent = translate(studyCopy.currentDay, { day: session.day });
+  document.getElementById("studyBookLabel").textContent = state.selectedBook.title;
+  document.getElementById("studyBookStatLabel").textContent = studyCopy.targetBook;
+  document.getElementById("studyProgressCopy").textContent = translate(studyCopy.progress, { mastered, total: session.cards.length });
+  document.getElementById("studyProgressFill").style.width = `${progressPercent}%`;
+  document.getElementById("studyRoundCount").textContent = String(session.answered);
+  document.getElementById("studyMasteredCount").textContent = String(mastered);
+  document.getElementById("studyLeftCount").textContent = String(left);
+  document.getElementById("studyRoundLabel").textContent = studyCopy.roundsLabel;
+  document.getElementById("studyMasteredLabel").textContent = studyCopy.masteredLabel;
+  document.getElementById("studyLeftLabel").textContent = studyCopy.leftLabel;
+  document.getElementById("studyRuleTitle").textContent = studyCopy.masteryRuleTitle;
+  document.getElementById("studyRuleCopy").textContent = studyCopy.masteryRuleCopy;
+  document.getElementById("studyHint").textContent = studyCopy.questionHint;
+  document.getElementById("studyBackToPlan").textContent = studyCopy.backToPlan;
+  document.getElementById("studyGotoGate").textContent = studyCopy.gotoGate;
+
+  document.getElementById("studyBackToPlan").onclick = () => go("plan");
+  document.getElementById("studyGotoGate").onclick = () => go("gate");
+
+  const feedback = document.getElementById("studyFeedback");
+  if (session.lastFeedback) {
+    feedback.classList.remove("hidden");
+    feedback.textContent = session.lastFeedback.message;
+  } else {
+    feedback.classList.add("hidden");
+    feedback.textContent = "";
+  }
+
+  const surface = document.getElementById("studyQuestionSurface");
+  const answerArea = document.getElementById("studyAnswerArea");
+  const badge = document.getElementById("studyTypeBadge");
+  const prompt = document.getElementById("studyPrompt");
+
+  if (session.completed || !session.currentQuestion) {
+    badge.textContent = studyCopy.typeLabels.scene_to_en_choice;
+    prompt.textContent = studyCopy.completeTitle;
+    surface.innerHTML = `
+      <div class="study-complete-card">
+        <strong>${escapeHtml(studyCopy.completeTitle)}</strong>
+        <p>${escapeHtml(studyCopy.completeCopy)}</p>
+      </div>
+    `;
+    answerArea.innerHTML = "";
+    return;
+  }
+
+  const question = session.currentQuestion;
+  badge.textContent = question.badge;
+  prompt.textContent = question.prompt;
+  surface.innerHTML = renderStudyQuestionSurface(question);
+  answerArea.innerHTML = renderStudyAnswerArea(question);
+
+  answerArea.querySelectorAll("[data-study-choice]").forEach((button) => {
+    button.addEventListener("click", () => submitStudyAnswer(decodeURIComponent(button.dataset.studyChoice || "")));
+  });
+
+  const submitButton = answerArea.querySelector("[data-study-submit]");
+  const spellInput = document.getElementById("studySpellInput");
+  if (submitButton && spellInput) {
+    submitButton.addEventListener("click", () => submitStudyAnswer(spellInput.value));
+    spellInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        submitStudyAnswer(spellInput.value);
+      }
+    });
+    spellInput.focus();
+  }
+}
+
+function renderStudyQuestionSurface(question) {
+  if (question.visual) {
+    return `
+      <div class="study-visual-card" style="--study-hue: ${question.visual.hue};">
+        <div class="study-visual-art">
+          <span class="study-visual-ring"></span>
+          <span class="study-visual-orb"></span>
+          <span class="study-visual-wave"></span>
+        </div>
+        <strong>${escapeHtml(question.visual.title)}</strong>
+        <p>${escapeHtml(question.visual.label)}</p>
+        <span class="task-meta">${escapeHtml(question.subline || "")}</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="study-word-card">
+      <div class="word">${escapeHtml(question.headline)}</div>
+      <p class="word-meta">${escapeHtml(question.subline || "")}</p>
+    </div>
+  `;
+}
+
+function renderStudyAnswerArea(question) {
+  if (question.type === "zh_to_en_spell") {
+    return `
+      <div class="study-spell-row">
+        <input id="studySpellInput" type="text" placeholder="${escapeHtml(question.inputPlaceholder || "")}" autocomplete="off" spellcheck="false">
+        <button class="primary-btn" type="button" data-study-submit>${escapeHtml(getCopy().study.submit)}</button>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="study-choice-grid">
+      ${question.options.map((option) => `
+        <button class="secondary-btn study-choice-btn" type="button" data-study-choice="${encodeURIComponent(option.value)}">
+          ${escapeHtml(option.value)}
+        </button>
+      `).join("")}
+    </div>
+  `;
+}
+
+function submitStudyAnswer(rawAnswer) {
+  const state = getState();
+  const session = state.studySession;
+  const question = session?.currentQuestion;
+  if (!session || !question) return;
+
+  const card = session.cards.find((item) => item.word === question.word);
+  if (!card) return;
+
+  const normalizedAnswer = normalizeStudyAnswer(rawAnswer);
+  const normalizedExpected = normalizeStudyAnswer(question.answer);
+  const correct = normalizedAnswer === normalizedExpected;
+
+  session.turn += 1;
+  session.answered += 1;
+  card.attempts += 1;
+
+  if (correct) {
+    card.correctPasses += 1;
+    card.dueTurn = session.turn + Math.min(5, 1 + (card.correctPasses * 2));
+    if (card.correctPasses >= getStudyRequiredPasses(card)) {
+      card.mastered = true;
+      if (!state.completion.includes(card.word)) state.completion.push(card.word);
+    }
+  } else {
+    card.wrongCount += 1;
+    card.dueTurn = session.turn + 1;
+  }
+
+  session.lastFeedback = {
+    correct,
+    message: correct
+      ? translate(question.type === "zh_to_en_spell" ? getCopy().study.spellSuccess : getCopy().study.correct, { word: question.word, gloss: question.gloss })
+      : translate(question.type === "zh_to_en_spell" ? getCopy().study.spellMiss : getCopy().study.incorrect, { word: question.word, gloss: question.gloss })
+  };
+  session.currentQuestion = null;
+  session.completed = session.cards.every((item) => item.mastered);
+
+  const totalPlanWords = state.plan.flatMap((bucket) => bucket.tasks).length;
+  state.gateUnlocked = totalPlanWords > 0 && state.completion.length === totalPlanWords;
+  state.studySession = ensureStudyQuestion(session, state);
+  setState(state);
+  renderStudy();
+}
+
+function normalizeStudyAnswer(value) {
+  return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
 function renderPlan() {
   const state = getState();
   const planCopy = getCopy().plan;
@@ -2586,27 +3073,6 @@ function renderPlan() {
   grid.querySelectorAll("[data-word]").forEach((button) => {
     button.addEventListener("click", () => toggleWordComplete(button.dataset.word));
   });
-}
-
-function toggleWordComplete(word) {
-  const state = getState();
-  if (state.completion.includes(word)) {
-    state.completion = state.completion.filter((item) => item !== word);
-  } else {
-    state.completion.push(word);
-  }
-
-  const total = state.plan.flatMap((bucket) => bucket.tasks).length;
-  if (total > 0 && state.completion.length === total) {
-    state.gateUnlocked = true;
-  }
-
-  setState(state);
-  renderPlan();
-
-  if (total > 0 && state.completion.length === total) {
-    go("gate");
-  }
 }
 
 function renderGate() {
