@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InRead | Assessment</title>
+  <link rel="stylesheet" href="styles.css?v=34">
+</head>
+<body data-page="assessment">
+  <div class="app-shell"><div class="frame">
+    <header class="topbar"><div class="brand"><span class="brand-mark">InRead Prototype</span><div class="brand-line">Read the book in front of you, not a giant word list.</div></div><div class="topbar-meta header-actions"><button class="top-link lang-toggle" type="button" data-language-toggle>EN</button><a class="top-link" data-top-link="library" href="library.html">Full Library</a></div></header>
+    <main class="page assessment-page"><section class="card assessment-card">
+      <div class="assessment-heading" aria-live="polite"><span class="eyebrow" id="assessmentEyebrow">Choose your starting point</span><h2 id="assessmentTitle">Choose one way to complete your assessment.</h2><p id="assessmentLead" class="lead compact">Each option sets a useful starting point for this book.</p></div>
+      <div class="assessment-choice-grid">
+        <button class="assessment-choice is-selected" type="button" data-assessment-route="score"><strong id="assessmentScoreOption">Use an existing score</strong><span id="assessmentScoreOptionHint">TOEFL, IELTS, or CEFR</span></button>
+        <button class="assessment-choice" type="button" data-assessment-route="test"><strong id="assessmentTestOption">Take the book check</strong><span id="assessmentTestOptionHint">Answer a short adaptive word check</span></button>
+        <button class="assessment-choice" type="button" data-assessment-route="cefr"><strong id="assessmentCefrOption">Use our CEFR assessment</strong><span id="assessmentCefrOptionHint">Adaptive difficulty · about 15-20 minutes</span></button>
+      </div>
+      <form id="externalScoreForm" class="external-score-form"><label><span id="scoreTypeLabel">Score type</span><select id="scoreType" name="scoreType"><option value="toefl-ibt">TOEFL iBT (new)</option><option value="toefl-pbt">TOEFL PBT (old)</option><option value="ielts">IELTS</option><option value="cefr-A1">CEFR A1</option><option value="cefr-A2">CEFR A2</option><option value="cefr-B1">CEFR B1</option><option value="cefr-B2">CEFR B2</option><option value="cefr-C1">CEFR C1</option><option value="cefr-C2">CEFR C2</option></select></label><label id="scoreNumberField"><span id="scoreValueLabel">Your score</span><input id="scoreValue" name="scoreValue" type="number" min="0" max="120" step="1" inputmode="decimal" required></label><p id="scoreRangeHint" class="foot-note">TOEFL iBT: 0-120. We use it only as a starting estimate for book recommendations.</p><p id="scoreFormMessage" class="score-form-message" aria-live="polite"></p><button id="applyExternalScore" class="primary-btn" type="submit">Use this score for recommendations</button></form>
+      <div id="bookTestStart" class="book-test-start" hidden><span class="eyebrow" id="bookTestEyebrow">Book check</span><h3 id="bookTestTitle">Ready to start?</h3><p id="bookTestCopy" class="lead compact">You will answer a concise adaptive set. Examples appear only after each choice.</p><button id="startBookTestButton" class="primary-btn" type="button">Start book check</button></div>
+    </section></main>
+  </div></div>
+  <script src="legacy-auth.js?v=34"></script><script src="app.js?v=35"></script>
+</body>
+</html>

@@ -9,4 +9,4 @@ export function middleware(request) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/legacy/:path*"] };
+export const config = { matcher: ["/legacy/:path*", "/reader"] };

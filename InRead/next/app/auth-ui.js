@@ -84,8 +84,9 @@ async function api(url, options = {}) {
 function UserMenu({ user }) {
   const state = user.profile?.learningState || {};
   const learned = state.completion?.length || 0;
+  const continueHref = state.selectedBook?.id ? `/reader?book=${encodeURIComponent(state.selectedBook.id)}` : "/legacy/search.html";
   async function logout() { await api("/api/auth/logout", { method: "POST" }); window.location.href = "/"; }
-  return <div className="user-menu"><a className="account-chip" href="/account"><span className="mini-avatar">{user.avatar}</span><span>{user.nickname}</span></a><div className="user-popover"><p className="popover-label">最近学习</p><strong>{state.selectedBook?.title || "还没有开始一本书"}</strong><span>{learned ? `已掌握 ${learned} 个词` : "从一本想读的书开始"}</span><a className="secondary-action" href="/legacy/search.html">继续学习</a>{user.role === "admin" && <a className="plain-button admin-popover-link" href="/admin">管理后台</a>}<button className="logout-button" onClick={logout}>退出登录</button></div></div>;
+  return <div className="user-menu"><a className="account-chip" href="/account"><span className="mini-avatar">{user.avatar}</span><span>{user.nickname}</span></a><div className="user-popover"><p className="popover-label">最近学习</p><strong>{state.selectedBook?.title || "还没有开始一本书"}</strong><span>{learned ? `已掌握 ${learned} 个词` : "从一本想读的书开始"}</span><a className="secondary-action" href={continueHref}>继续学习</a>{user.role === "admin" && <a className="plain-button admin-popover-link" href="/admin">管理后台</a>}<button className="logout-button" onClick={logout}>退出登录</button></div></div>;
 }
 
 export function Landing() {

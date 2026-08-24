@@ -1287,34 +1287,62 @@ const EXTERNAL_SCORE_CONFIG = {
 const EXTERNAL_ASSESSMENT_COPY = {
   en: {
     eyebrow: "Choose your starting point",
-    title: "Use a verified score, or take the quick check.",
-    lead: "A recent TOEFL, IELTS, or CEFR result gives InRead a useful first reading boundary. You can always take the book check later.",
+    title: "Choose one way to complete your assessment.",
+    lead: "Each option sets a useful starting point for this book.",
+    scoreTitle: "Use an existing score.",
+    scoreLead: "Enter a recent TOEFL, IELTS, or CEFR result to set your initial reading boundary.",
+    bookCheckTitle: "Take this book's quick word check.",
+    bookCheckLead: "Answer a short adaptive set, and InRead will estimate how smoothly this specific book will read.",
+    cefrTitle: "Use the InRead CEFR adaptive assessment.",
+    cefrLead: "A separate 15-20 minute assessment can return a verified CEFR result to your reading profile.",
     scoreOption: "Use an existing score",
     scoreOptionHint: "TOEFL, IELTS, or CEFR",
     testOption: "Take the book check",
     testOptionHint: "Answer a short adaptive word check",
+    cefrOption: "Use our CEFR assessment",
+    cefrOptionHint: "Adaptive difficulty · about 15-20 minutes",
     typeLabel: "Score type",
     valueLabel: "Your score",
-    cefrLabel: "Your CEFR level",
     submit: "Use this score for recommendations",
-    testTitle: "Start the quick book check",
+    bookTestEyebrow: "Book check",
+    bookTestTitle: "Ready to start?",
+    bookTestCopy: "You will answer a concise adaptive set. Examples appear only after each choice.",
+    startTest: "Start book check",
+    cefrTestEyebrow: "CEFR assessment",
+    cefrTestTitle: "Ready to open the CEFR assessment?",
+    cefrTestCopy: "The adaptive CEFR tool is a separate 15-20 minute experience. Its verified result will return to this reading profile.",
+    startCefrTest: "Go to CEFR assessment",
     hint: ({ label, min, max }) => `${label}: ${min}-${max}. We use it only as a starting estimate for book recommendations.`,
     invalid: ({ label, min, max }) => `Enter a valid ${label} score from ${min} to ${max}.`,
     testNotice: "The score form is hidden. Your answers will now shape this book check."
   },
   zh: {
     eyebrow: "选择你的起点",
-    title: "使用已有成绩，或完成快速测词。",
-    lead: "近期的新/老托福、雅思或 CEFR 成绩可以为 InRead 提供初始阅读边界。之后你仍可随时完成图书测词。",
+    title: "请选择一种方式完成评估。",
+    lead: "每种方式都会为这本书建立一个合适的阅读起点。",
+    scoreTitle: "使用已有成绩完成评估。",
+    scoreLead: "输入近期的新/老托福、雅思或 CEFR 成绩，为阅读推荐建立初始边界。",
+    bookCheckTitle: "完成这本书的快速测词。",
+    bookCheckLead: "回答一组简短的自适应词汇题，InRead 将判断你阅读这本书时的顺畅程度。",
+    cefrTitle: "使用 InRead CEFR 自适应测试。",
+    cefrLead: "独立的 15-20 分钟测试会将可信的 CEFR 结果回写到你的阅读档案。",
     scoreOption: "使用已有成绩",
     scoreOptionHint: "新/老托福、雅思或 CEFR",
     testOption: "完成图书测词",
     testOptionHint: "回答一组简短的自适应词汇题",
+    cefrOption: "使用我们的 CEFR 测试工具",
+    cefrOptionHint: "自适应难度 · 约 15-20 分钟",
     typeLabel: "成绩类型",
     valueLabel: "你的分数",
-    cefrLabel: "你的 CEFR 等级",
     submit: "按该成绩获取推荐",
-    testTitle: "开始快速图书测词",
+    bookTestEyebrow: "图书测词",
+    bookTestTitle: "准备开始了吗？",
+    bookTestCopy: "你将完成一组精简的自适应题目。每次选择后才会显示书内例句。",
+    startTest: "开始图书测词",
+    cefrTestEyebrow: "CEFR 自适应测试",
+    cefrTestTitle: "准备进入 CEFR 测试了吗？",
+    cefrTestCopy: "该工具将打开独立的 15-20 分钟自适应测试。完成后的可信 CEFR 结果会回写到当前阅读档案。",
+    startCefrTest: "进入 CEFR 测试",
     hint: ({ label, min, max }) => `${label}：${min}-${max}。系统仅将其作为图书推荐的初始估算。`,
     invalid: ({ label, min, max }) => `请输入 ${min}-${max} 之间的有效 ${label} 分数。`,
     testNotice: "成绩输入已收起，现在将由你的答题情况决定这本书的测词结果。"
@@ -1341,13 +1369,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (page === "search") initSearchPage();
   if (page === "library") initLibraryPage();
+  if (page === "assessment") initAssessmentPage();
   if (page === "test") initTestPage();
+  if (page === "cefr") initCefrToolPage();
   if (page === "result") initResultPage();
   if (page === "plan") initPlanPage();
   if (page === "study") initStudyPage();
   if (page === "gate") initGatePage();
 
   if (!getStoredLanguage()) showLanguageModal();
+  // Evaluate after each page has rendered: screen aspect ratio alone cannot
+  // predict whether translated labels or browser zoom will need scrolling.
+  window.requestAnimationFrame(syncViewportProfile);
 });
 
 window.addEventListener("resize", syncViewportProfile, { passive: true });
@@ -1607,6 +1640,15 @@ function syncViewportProfile() {
 
   document.body.dataset.viewportProfile = profile;
   document.body.dataset.autoScroll = needsDocumentScroll ? "true" : "false";
+
+  // A MacBook, a browser with enlarged text, and a 16:9 monitor can all have
+  // different usable heights. Inspect the rendered page instead of relying on
+  // a hard-coded desktop resolution.
+  window.requestAnimationFrame(() => {
+    const page = document.querySelector(".page");
+    const contentNeedsScroll = Boolean(page && page.scrollHeight > page.clientHeight + 2);
+    document.body.dataset.autoScroll = (needsDocumentScroll || contentNeedsScroll) ? "true" : "false";
+  });
 }
 
 function defaultState() {
@@ -1617,6 +1659,7 @@ function defaultState() {
     visitedWords: [],
     knownWords: [],
     unknownWords: [],
+    pendingTestAnswer: null,
     result: null,
     plan: [],
     planDays: 7,
@@ -1691,6 +1734,7 @@ function createFreshState(book, currentState = getState()) {
     visitedWords: [],
     knownWords: [],
     unknownWords: [],
+    pendingTestAnswer: null,
     result: null,
     plan: [],
     planDays: 7,
@@ -1802,18 +1846,22 @@ function initTestPage() {
   document.getElementById("backToSearch").addEventListener("click", () => go("search"));
   document.getElementById("knowButton").addEventListener("click", () => answerWord(true));
   document.getElementById("dontKnowButton").addEventListener("click", () => answerWord(false));
-  bindExternalAssessment();
+  document.getElementById("continueTestButton").addEventListener("click", continueTestAnswer);
+  renderTest();
 }
 
-function bindExternalAssessment() {
-  const entry = document.getElementById("assessmentEntry");
-  const testContent = document.getElementById("adaptiveTestContent");
+function initAssessmentPage() {
+  const state = getState();
+  if (!state.selectedBook || !state.orderedWords.length) {
+    go("search");
+    return;
+  }
   const form = document.getElementById("externalScoreForm");
   const typeInput = document.getElementById("scoreType");
   const scoreInput = document.getElementById("scoreValue");
-  const cefrField = document.getElementById("cefrField");
   const numberField = document.getElementById("scoreNumberField");
   const message = document.getElementById("scoreFormMessage");
+  const bookTestStart = document.getElementById("bookTestStart");
   const copy = EXTERNAL_ASSESSMENT_COPY[currentLanguage] || EXTERNAL_ASSESSMENT_COPY.en;
 
   const setText = (id, value) => { document.getElementById(id).textContent = value; };
@@ -1824,18 +1872,39 @@ function bindExternalAssessment() {
   setText("assessmentScoreOptionHint", copy.scoreOptionHint);
   setText("assessmentTestOption", copy.testOption);
   setText("assessmentTestOptionHint", copy.testOptionHint);
+  setText("assessmentCefrOption", copy.cefrOption);
+  setText("assessmentCefrOptionHint", copy.cefrOptionHint);
   setText("scoreTypeLabel", copy.typeLabel);
   setText("scoreValueLabel", copy.valueLabel);
-  setText("cefrValueLabel", copy.cefrLabel);
   setText("applyExternalScore", copy.submit);
+  setText("bookTestEyebrow", copy.bookTestEyebrow);
+  setText("bookTestTitle", copy.bookTestTitle);
+  setText("bookTestCopy", copy.bookTestCopy);
+  setText("startBookTestButton", copy.startTest);
+  let selectedAssessmentRoute = "score";
+  const heading = document.querySelector(".assessment-heading");
+
+  const updateAssessmentHeading = (route) => {
+    const content = route === "score"
+      ? { title: copy.scoreTitle, lead: copy.scoreLead }
+      : route === "test"
+        ? { title: copy.bookCheckTitle, lead: copy.bookCheckLead }
+        : { title: copy.cefrTitle, lead: copy.cefrLead };
+    heading?.classList.remove("is-transitioning");
+    setText("assessmentTitle", content.title);
+    setText("assessmentLead", content.lead);
+    // Restart a compact, content-only transition without shifting the cards.
+    void heading?.offsetWidth;
+    heading?.classList.add("is-transitioning");
+  };
 
   const syncScoreFields = () => {
-    const config = EXTERNAL_SCORE_CONFIG[typeInput.value];
-    const usesCefr = typeInput.value === "cefr";
-    cefrField.hidden = !usesCefr;
+    const type = typeInput.value;
+    const config = EXTERNAL_SCORE_CONFIG[type];
+    const usesCefr = type.startsWith("cefr-");
     numberField.hidden = usesCefr;
     scoreInput.required = !usesCefr;
-    if (!usesCefr) {
+    if (!usesCefr && config) {
       scoreInput.min = String(config.min);
       scoreInput.max = String(config.max);
       scoreInput.step = String(config.step);
@@ -1843,24 +1912,29 @@ function bindExternalAssessment() {
       document.getElementById("scoreRangeHint").textContent = copy.hint(config);
     } else {
       document.getElementById("scoreRangeHint").textContent = currentLanguage === "zh"
-        ? "CEFR 是欧洲语言共同参考框架。选择最接近你近期正式评估的等级。"
-        : "CEFR is the Common European Framework. Choose the level closest to your recent formal assessment.";
+        ? "CEFR 等级已包含在成绩类型中，系统将直接用于推荐。"
+        : "The CEFR level is already included in the selected score type and will be used directly for recommendations.";
     }
     message.textContent = "";
   };
 
   document.querySelectorAll("[data-assessment-route]").forEach((button) => {
     button.addEventListener("click", () => {
-      const useTest = button.dataset.assessmentRoute === "test";
+      selectedAssessmentRoute = button.dataset.assessmentRoute;
+      const useLaunchCard = selectedAssessmentRoute === "test" || selectedAssessmentRoute === "cefr";
       document.querySelectorAll("[data-assessment-route]").forEach((item) => item.classList.toggle("is-selected", item === button));
-      if (useTest) {
-        entry.hidden = true;
-        testContent.hidden = false;
-        document.getElementById("testIntro").textContent = copy.testNotice;
-        renderTest();
+      updateAssessmentHeading(selectedAssessmentRoute);
+      if (useLaunchCard) {
+        form.hidden = true;
+        bookTestStart.hidden = false;
+        const isCefrTool = selectedAssessmentRoute === "cefr";
+        setText("bookTestEyebrow", isCefrTool ? copy.cefrTestEyebrow : copy.bookTestEyebrow);
+        setText("bookTestTitle", isCefrTool ? copy.cefrTestTitle : copy.bookTestTitle);
+        setText("bookTestCopy", isCefrTool ? copy.cefrTestCopy : copy.bookTestCopy);
+        setText("startBookTestButton", isCefrTool ? copy.startCefrTest : copy.startTest);
       } else {
-        entry.hidden = false;
-        testContent.hidden = true;
+        form.hidden = false;
+        bookTestStart.hidden = true;
       }
     });
   });
@@ -1870,7 +1944,7 @@ function bindExternalAssessment() {
     event.preventDefault();
     const type = typeInput.value;
     const config = EXTERNAL_SCORE_CONFIG[type];
-    const rawScore = type === "cefr" ? document.getElementById("cefrValue").value : Number(scoreInput.value);
+    const rawScore = type.startsWith("cefr-") ? type.slice(5) : Number(scoreInput.value);
     const profile = buildExternalReaderProfile(type, rawScore);
     if (!profile) {
       message.textContent = copy.invalid(config);
@@ -1885,18 +1959,21 @@ function bindExternalAssessment() {
     go("library", { assessment: "external" });
   });
 
+  document.getElementById("startBookTestButton").addEventListener("click", () => go(selectedAssessmentRoute === "cefr" ? "cefr-test" : "test"));
+
   syncScoreFields();
 }
 
 function buildExternalReaderProfile(type, rawScore) {
-  const config = EXTERNAL_SCORE_CONFIG[type];
+  const isCefr = type.startsWith("cefr-");
+  const config = isCefr ? EXTERNAL_SCORE_CONFIG.cefr : EXTERNAL_SCORE_CONFIG[type];
   if (!config) return null;
   let level;
   let estimatedVocab;
   let displayScore;
-  if (type === "cefr") {
+  if (isCefr) {
     level = String(rawScore || "").toUpperCase();
-    estimatedVocab = config.vocab[level];
+    estimatedVocab = EXTERNAL_SCORE_CONFIG.cefr.vocab[level];
     displayScore = level;
   } else {
     const score = Number(rawScore);
@@ -1907,7 +1984,7 @@ function buildExternalReaderProfile(type, rawScore) {
     displayScore = String(score);
   }
   if (!estimatedVocab) return null;
-  const source = `${config.label} ${displayScore}`;
+  const source = `${isCefr ? "CEFR" : config.label} ${displayScore}`;
   return {
     estimatedVocab,
     level,
@@ -1916,6 +1993,11 @@ function buildExternalReaderProfile(type, rawScore) {
     unknownCount: null,
     assessment: { type, score: displayScore, source: "external" }
   };
+}
+
+function initCefrToolPage() {
+  // Keep the CEFR experience on InRead's origin so the signed-in account can receive the verified result.
+  window.location.replace("/api/cefr");
 }
 
 function initResultPage() {
@@ -1930,7 +2012,7 @@ function initResultPage() {
 
   document.getElementById("restartButton").addEventListener("click", () => {
     setState(createFreshState(state.selectedBook, getState()));
-    go("test");
+    go("assessment");
   });
   document.getElementById("planButton").addEventListener("click", generatePlanFromResult);
   document.getElementById("directReadButton").addEventListener("click", handleDirectReadAction);
@@ -1996,6 +2078,12 @@ function initGatePage() {
 
   renderGate();
   document.getElementById("backToSearch").addEventListener("click", () => go("search"));
+  document.getElementById("gateReadButton").addEventListener("click", () => openReader(getState().selectedBook));
+  document.getElementById("gateTestButton").addEventListener("click", () => {
+    const current = getState();
+    setState(createFreshState(current.selectedBook, current));
+    go("assessment");
+  });
   const backToPlan = document.getElementById("backToPlan");
   if (state.plan.length && state.result && state.result.level !== "L1") {
     backToPlan.classList.remove("hidden");
@@ -2146,7 +2234,7 @@ function openLibrarySearch(query) {
 function startBookTest(book) {
   const state = createFreshState(book, getState());
   setState(state);
-  go("test");
+  go("assessment");
 }
 
 function translateTag(tag) {
@@ -2236,13 +2324,17 @@ function renderLibraryResults({ query, activeTag, heading, summary, results, rea
   results.querySelectorAll("[data-book-id]").forEach((button) => {
     button.addEventListener("click", () => {
       const book = buildBooks().find((item) => item.id === button.dataset.bookId);
-      if (book) startBookTest(book);
+      if (!book) return;
+      if (button.dataset.bookAction === "read") openReader(book);
+      else if (button.dataset.bookAction === "recommend") openBookRecommendation(book);
+      else startBookTest(book);
     });
   });
 }
 
 function renderLibraryCard(book, readerProfile) {
   const match = getBookMatch(book, readerProfile);
+  const actions = getLibraryCardActions(match, readerProfile);
   return `
     <article class="library-card">
       <div class="library-card-top">
@@ -2269,10 +2361,33 @@ function renderLibraryCard(book, readerProfile) {
 
       <div class="library-card-bottom">
         <div class="word-meta">${escapeHtml(translate(getCopy().library.footer, { range: formatVocabRange(book.recommendedRange), coverage: getBookCoverage(book) }))}</div>
-        <button class="primary-btn" type="button" data-book-id="${escapeHtml(book.id)}">${escapeHtml(getCopy().library.startTest)}</button>
+        <div class="library-card-actions">
+          ${actions.map((action) => `<button class="primary-btn ${action.locked ? "library-action-locked" : ""}" type="button" data-book-id="${escapeHtml(book.id)}" data-book-action="${action.type}">${escapeHtml(action.label)}</button>`).join("")}
+        </div>
       </div>
     </article>
   `;
+}
+
+function getLibraryCardActions(match, readerProfile) {
+  if (!readerProfile) {
+    return [
+      { type: "read", label: currentLanguage === "zh" ? "开始阅读" : "Start reading", locked: false },
+      { type: "test", label: getCopy().library.startTest, locked: false }
+    ];
+  }
+  if (match.key === "demanding" || match.key === "not_yet") {
+    return [{
+      type: "recommend",
+      label: currentLanguage === "zh" ? "🔒 查看阅读建议" : "🔒 View reading advice",
+      locked: true
+    }];
+  }
+  return [{
+    type: "read",
+    label: currentLanguage === "zh" ? "开始阅读" : "Start reading",
+    locked: false
+  }];
 }
 
 function getVisibleBooks(query, activeTag, readerProfile) {
@@ -2410,7 +2525,7 @@ function normalizeText(value) {
 function answerWord(isKnown) {
   const state = getState();
   const currentWord = state.orderedWords[state.currentIndex];
-  if (!currentWord) return;
+  if (!currentWord || state.pendingTestAnswer) return;
 
   if (!state.visitedWords.includes(currentWord.word)) {
     state.visitedWords.push(currentWord.word);
@@ -2418,8 +2533,19 @@ function answerWord(isKnown) {
     if (!isKnown) state.unknownWords.push(currentWord);
   }
 
+  state.pendingTestAnswer = { word: currentWord.word, isKnown };
+  setState(state);
+  renderTest();
+}
+
+function continueTestAnswer() {
+  const state = getState();
+  const pending = state.pendingTestAnswer;
+  const currentWord = state.orderedWords[state.currentIndex];
+  if (!pending || !currentWord) return;
   const reachedThreshold = state.unknownWords.length >= UNKNOWN_THRESHOLD;
   const exhaustedWords = state.visitedWords.length >= state.orderedWords.length;
+  delete state.pendingTestAnswer;
   if (reachedThreshold || exhaustedWords) {
     state.result = buildResult(state.unknownWords.length);
     state.readerProfile = deriveReaderProfile(state);
@@ -2429,7 +2555,7 @@ function answerWord(isKnown) {
     return;
   }
 
-  state.currentIndex = findNextIndex(state, isKnown ? 1 : -1);
+  state.currentIndex = findNextIndex(state, pending.isKnown ? 1 : -1);
   setState(state);
   renderTest();
 }
@@ -2437,6 +2563,7 @@ function answerWord(isKnown) {
 function renderTest() {
   const state = getState();
   const currentWord = state.orderedWords[state.currentIndex];
+  if (!currentWord) return;
   const askedCount = state.visitedWords.length;
   const progress = Math.round((askedCount / state.orderedWords.length) * 100);
   const testCopy = getCopy().test;
@@ -2453,6 +2580,25 @@ function renderTest() {
     total: state.orderedWords.length
   });
   document.getElementById("adaptiveNote").textContent = testCopy.adaptiveNote;
+  const feedback = document.getElementById("testFeedback");
+  const answerArea = document.getElementById("testAnswerArea");
+  const pending = state.pendingTestAnswer;
+  document.querySelector(".test-word-panel")?.classList.toggle("is-showing-feedback", Boolean(pending));
+  feedback.hidden = !pending;
+  answerArea.hidden = Boolean(pending);
+  window.requestAnimationFrame(syncViewportProfile);
+  if (!pending) return;
+
+  const isKnown = pending.isKnown;
+  const zh = currentLanguage === "zh";
+  document.getElementById("feedbackEyebrow").textContent = zh ? "书内语境" : "Book context";
+  document.getElementById("feedbackResult").textContent = zh
+    ? (isKnown ? `你选择了“认识” ${currentWord.word}。看看它在书中的语境。` : `你选择了“不认识 / 模糊” ${currentWord.word}。先把它放回书中理解。`)
+    : (isKnown ? `You marked “${currentWord.word}” as known. See it in the book context.` : `You marked “${currentWord.word}” as unsure. See it in the book context.`);
+  document.getElementById("feedbackExampleLabel").textContent = zh ? "书内例句" : "Example in this book";
+  document.getElementById("feedbackSentence").textContent = currentWord.sentenceEn || currentWord.sentence || "";
+  document.getElementById("feedbackTranslation").textContent = currentWord.sentenceZh || "";
+  document.getElementById("continueTestButton").textContent = zh ? "继续下一题" : "Continue";
 }
 
 function findNextIndex(state, step) {
@@ -2750,6 +2896,26 @@ function handleDirectReadAction() {
 
   state.directChallenge = shouldShowDirectChallenge(state.result);
   state.gateUnlocked = canReadImmediately(state.result) || state.gateUnlocked;
+  setState(state);
+  go("gate");
+}
+
+function openReader(book) {
+  const state = getState();
+  state.selectedBook = book;
+  state.readerAccess = { source: "library", matchKey: getBookMatchKey(book, state.readerProfile) };
+  setState(state);
+  const target = `/reader?book=${encodeURIComponent(book.id)}`;
+  const navigate = () => { window.location.assign(target); };
+  const flushState = window.InReadAccount?.flushState;
+  if (flushState) flushState(state).finally(navigate);
+  else navigate();
+}
+
+function openBookRecommendation(book) {
+  const state = getState();
+  state.selectedBook = book;
+  state.readerAccess = { source: "library", matchKey: getBookMatchKey(book, state.readerProfile) };
   setState(state);
   go("gate");
 }
@@ -3540,8 +3706,28 @@ function renderGate() {
   const gateMessage = document.getElementById("gateMessage");
   const gateReasonLabel = document.getElementById("gateReasonLabel");
   const gateActionLabel = document.getElementById("gateActionLabel");
+  const gateReadButton = document.getElementById("gateReadButton");
+  const gateTestButton = document.getElementById("gateTestButton");
+  gateReadButton.classList.add("hidden");
+  gateTestButton.classList.add("hidden");
   gateStateLabel.classList.remove("success", "tone-positive", "tone-balanced", "tone-caution", "tone-warning", "tone-danger", "tone-neutral");
   renderGateGuide(state.result?.tierKey || null);
+
+  if (!state.result && state.readerAccess?.source === "library") {
+    const match = getBookMatch(state.selectedBook, state.readerProfile);
+    gateStateLabel.textContent = currentLanguage === "zh" ? "🔒 当前不建议阅读" : "🔒 Not recommended right now";
+    gateStateLabel.classList.add("tone-danger");
+    gateMessage.textContent = currentLanguage === "zh"
+      ? `《${state.selectedBook.title}》目前会带来较大的理解压力。你可以先完成这本书的测词，也可以无视风险继续阅读。`
+      : `"${state.selectedBook.title}" will likely create substantial reading pressure right now. Take its word check first, or continue despite the risk.`;
+    gateReasonLabel.textContent = match.label;
+    gateActionLabel.textContent = currentLanguage === "zh" ? "先测词或继续阅读" : "Test first or continue";
+    gateTestButton.textContent = currentLanguage === "zh" ? "完成图书测词" : "Take book check";
+    gateReadButton.textContent = currentLanguage === "zh" ? "仍要继续阅读" : "Continue anyway";
+    gateTestButton.classList.remove("hidden");
+    gateReadButton.classList.remove("hidden");
+    return;
+  }
 
   if (!state.result) {
     gateStateLabel.textContent = gateCopy.locked;
@@ -3549,6 +3735,8 @@ function renderGate() {
     gateMessage.textContent = gateCopy.noResultMessage;
     gateReasonLabel.textContent = gateCopy.waitingTest;
     gateActionLabel.textContent = gateCopy.startTest;
+    gateTestButton.textContent = currentLanguage === "zh" ? "开始图书测词" : "Start book check";
+    gateTestButton.classList.remove("hidden");
     return;
   }
 
@@ -3560,6 +3748,8 @@ function renderGate() {
     gateMessage.textContent = readiness.readyMessage({ title: state.selectedBook.title });
     gateReasonLabel.textContent = readiness.label;
     gateActionLabel.textContent = gateCopy.readNow;
+    gateReadButton.textContent = currentLanguage === "zh" ? "进入阅读" : "Start reading";
+    gateReadButton.classList.remove("hidden");
     return;
   }
 
@@ -3570,6 +3760,8 @@ function renderGate() {
       : readiness.readyMessage({ title: state.selectedBook.title });
     gateReasonLabel.textContent = readiness.label;
     gateActionLabel.textContent = gateCopy.readNow;
+    gateReadButton.textContent = currentLanguage === "zh" ? "进入阅读" : "Start reading";
+    gateReadButton.classList.remove("hidden");
     return;
   }
 

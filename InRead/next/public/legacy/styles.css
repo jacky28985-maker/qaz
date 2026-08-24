@@ -360,8 +360,11 @@ html[data-theme="dark"] .legacy-logout { background: #422727; }
 html[data-theme="dark"] .card, html[data-theme="dark"] .library-card, html[data-theme="dark"] .day-card, html[data-theme="dark"] .plan-day-details[open] summary { background: var(--surface); }
 html:is([data-theme="dark"], [data-theme="aurora"]) :is(.card, .card.soft, .mini-card, .journey-flow, .journey-step, .library-card, .empty-state, .plan-builder-card, .plan-map-wrap, .study-status-wrap, .study-checklist-wrap, .day-card, .task, .study-question-surface, .study-word-card, .study-complete-card, .study-visual-card, .guide-card-active, .plan-day-details[open] summary) { background: var(--surface) !important; background-image: none; }
 html:is([data-theme="dark"], [data-theme="aurora"]) .page { background: var(--bg) !important; background-image: none; }
-html:is([data-theme="dark"], [data-theme="aurora"]) :is(.search-suggestion, .filter-chip, .pill-btn, .secondary-btn, .plan-slider-value-input, .task-status-chip, .plan-day-actions button, .study-spell-row input, .input-row input) { background: var(--surface-soft) !important; color: var(--ink); }
+html:is([data-theme="dark"], [data-theme="aurora"]) :is(.search-suggestion, .filter-chip, .pill-btn, .secondary-btn, .plan-slider-value-input, .task-status-chip, .plan-day-actions button, .study-spell-row input, .input-row input, .external-score-form input, .external-score-form select) { background: var(--surface-soft) !important; color: var(--ink); }
 html:is([data-theme="dark"], [data-theme="aurora"]) :is(.hero-card, .library-hero, .plan-shell, .study-shell) { background: var(--surface) !important; }
+html:is([data-theme="dark"], [data-theme="aurora"]) .hero-script-line { color: var(--muted); text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2); }
+html[data-theme="dark"] .hero-card::after { background: radial-gradient(circle, rgba(140, 185, 150, 0.1), transparent 70%); }
+html[data-theme="aurora"] .hero-card::after { background: radial-gradient(circle, rgba(130, 154, 255, 0.16), transparent 70%); }
 html:is([data-theme="dark"], [data-theme="aurora"]) input::placeholder { color: var(--muted); opacity: .88; }
 html[data-theme="aurora"] .rotate-notice { background: rgba(8, 9, 18, .94); }
 html[data-theme="aurora"] .legacy-avatar { background: #273450; }
@@ -774,12 +777,17 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 7px 11px;
+  flex: 0 0 auto;
+  min-width: 48px;
+  height: 32px;
+  padding: 0 12px;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: #ffffff;
+  background: var(--surface);
   color: var(--muted);
   font-size: 0.84rem;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .filter-chip {
@@ -997,6 +1005,25 @@ button:disabled {
   box-shadow: 0 22px 46px rgba(17, 17, 17, 0.08);
 }
 
+.library-action-locked {
+  background: var(--surface-soft);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+.library-card-actions {
+  display: grid;
+  min-width: 118px;
+  gap: 8px;
+  justify-items: stretch;
+}
+
+.library-card-actions .primary-btn {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
 .library-card-top,
 .library-card-bottom,
 .match-panel {
@@ -1041,7 +1068,7 @@ button:disabled {
   overflow: hidden;
   border-radius: 999px;
   border: 1px solid var(--line);
-  background: #f1f1ed;
+  background: var(--surface-soft);
 }
 
 .match-fill {
@@ -1080,6 +1107,80 @@ button:disabled {
 
 .match-fill-unknown {
   background: linear-gradient(90deg, #ddddda 0%, #c6c6c0 100%);
+}
+
+html[data-theme="dark"] .match-bar {
+  background: #2a312d;
+  border-color: #425047;
+}
+
+html[data-theme="dark"] .match-fill-easy {
+  background: linear-gradient(90deg, #48524c 0%, #657067 100%);
+}
+
+html[data-theme="dark"] .match-fill-warmup {
+  background: linear-gradient(90deg, #365144 0%, #5f8b70 100%);
+}
+
+html[data-theme="dark"] .match-fill-right {
+  background: linear-gradient(90deg, #347151 0%, #70bd8a 100%);
+}
+
+html[data-theme="dark"] .match-fill-stretch {
+  background: linear-gradient(90deg, #617f42 0%, #a4c969 100%);
+}
+
+html[data-theme="dark"] .match-fill-challenge {
+  background: linear-gradient(90deg, #977331 0%, #d9ad52 100%);
+}
+
+html[data-theme="dark"] .match-fill-demanding {
+  background: linear-gradient(90deg, #8b5836 0%, #d28b55 100%);
+}
+
+html[data-theme="dark"] .match-fill-hard {
+  background: linear-gradient(90deg, #8d4547 0%, #d36d70 100%);
+}
+
+html[data-theme="dark"] .match-fill-unknown {
+  background: linear-gradient(90deg, #4c544f 0%, #707a72 100%);
+}
+
+html[data-theme="aurora"] .match-bar {
+  background: rgba(72, 80, 114, 0.5);
+  border-color: rgba(187, 198, 255, 0.28);
+}
+
+html[data-theme="aurora"] .match-fill-easy {
+  background: linear-gradient(90deg, #4c5577 0%, #727ea9 100%);
+}
+
+html[data-theme="aurora"] .match-fill-warmup {
+  background: linear-gradient(90deg, #3d6b70 0%, #71aead 100%);
+}
+
+html[data-theme="aurora"] .match-fill-right {
+  background: linear-gradient(90deg, #3b727d 0%, #78c6d0 100%);
+}
+
+html[data-theme="aurora"] .match-fill-stretch {
+  background: linear-gradient(90deg, #6f7242 0%, #b8ba70 100%);
+}
+
+html[data-theme="aurora"] .match-fill-challenge {
+  background: linear-gradient(90deg, #93703a 0%, #d9b764 100%);
+}
+
+html[data-theme="aurora"] .match-fill-demanding {
+  background: linear-gradient(90deg, #965749 0%, #d78865 100%);
+}
+
+html[data-theme="aurora"] .match-fill-hard {
+  background: linear-gradient(90deg, #984c68 0%, #df7697 100%);
+}
+
+html[data-theme="aurora"] .match-fill-unknown {
+  background: linear-gradient(90deg, #5a6084 0%, #858db7 100%);
 }
 
 .empty-state {
@@ -1129,6 +1230,45 @@ button:disabled {
   align-content: start;
 }
 
+.assessment-card {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  width: min(100%, 1040px);
+  margin: auto;
+}
+
+.assessment-card h2 {
+  margin: 0;
+  max-width: 760px;
+}
+
+.assessment-heading {
+  display: grid;
+  gap: 10px;
+}
+
+.assessment-heading .eyebrow,
+.assessment-heading .lead {
+  margin: 0;
+}
+
+.assessment-heading.is-transitioning {
+  animation: assessmentHeadingEnter 320ms var(--ease-soft) both;
+}
+
+@keyframes assessmentHeadingEnter {
+  from {
+    opacity: 0.35;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .assessment-entry h2 {
   margin: 0;
   max-width: 760px;
@@ -1152,6 +1292,10 @@ button:disabled {
   text-align: left;
   cursor: pointer;
   transition: transform 220ms var(--ease-soft), border-color 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
+}
+
+.assessment-link {
+  text-decoration: none;
 }
 
 .assessment-choice:hover,
@@ -1220,6 +1364,135 @@ button:disabled {
 .external-score-form .primary-btn {
   min-height: 48px;
   white-space: nowrap;
+}
+
+.external-score-form[hidden],
+.book-test-start[hidden],
+[hidden] {
+  display: none !important;
+}
+
+.book-test-start,
+.test-feedback {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+}
+
+.book-test-start h3 {
+  margin: 0;
+}
+
+.test-word-panel {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-content: stretch;
+}
+
+/* Feedback is taller than an answer row. Let the page grow and scroll instead
+   of shrinking the word area until its contents paint over the feedback card. */
+.test-word-panel.is-showing-feedback {
+  grid-template-rows: auto auto auto;
+  min-height: 0;
+  align-content: start;
+}
+
+.test-word-panel.is-showing-feedback .test-question {
+  min-height: 0;
+}
+
+.assessment-page {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+}
+
+.test-page {
+  grid-template-columns: minmax(0, 1fr) minmax(248px, 0.42fr);
+  align-items: stretch;
+}
+
+.test-status-card {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+}
+
+.test-question {
+  display: grid;
+  align-content: center;
+  gap: 14px;
+}
+
+.test-answer-area {
+  display: grid;
+  gap: 14px;
+  align-content: end;
+}
+
+.test-answer-row {
+  margin-top: 0;
+}
+
+.test-feedback .quote-box {
+  margin: 0;
+  background: var(--surface);
+}
+
+.feedback-translation {
+  margin: 10px 0 0;
+}
+
+.cefr-bridge {
+  display: grid;
+  gap: 18px;
+  align-content: center;
+  min-height: min(520px, 62vh);
+}
+
+body[data-auto-scroll="true"][data-page="assessment"] .page,
+body[data-auto-scroll="true"][data-page="test"] .page {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Keep the decision controls inside the first view on short laptops. */
+@media (min-width: 768px) and (max-height: 840px) {
+  .page {
+    padding: 26px;
+    gap: 20px;
+  }
+
+  .card {
+    padding: 22px;
+  }
+
+  .assessment-choice {
+    min-height: 92px;
+    padding: 15px;
+  }
+
+  .test-word-panel {
+    gap: 14px;
+  }
+
+  .test-question {
+    gap: 10px;
+  }
+
+  .word {
+    margin-top: 8px;
+    font-size: clamp(2.65rem, 5.2vw, 4.2rem);
+  }
+
+  .test-status-card {
+    gap: 14px;
+  }
+
+  .test-status-card .quote-box {
+    padding: 16px;
+  }
 }
 
 #adaptiveTestContent {
@@ -2207,6 +2480,11 @@ body[data-viewport-profile="desktop-compact"] .step:hover {
   .library-card-top,
   .library-card-bottom {
     flex-direction: column;
+  }
+
+  .library-card-actions {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .study-spell-row {

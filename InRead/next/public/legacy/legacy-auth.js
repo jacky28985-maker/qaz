@@ -29,7 +29,7 @@
           <span class="legacy-account-label">Recent learning</span>
           <strong>${escapeHtml(state.selectedBook?.title || "Choose a book to begin")}</strong>
           <span>${learned ? `${learned} words mastered` : "Your next reading path will appear here."}</span>
-          <a class="legacy-continue" href="/legacy/search.html">Continue learning</a>
+           <a class="legacy-continue" href="${state.selectedBook?.id ? `/reader?book=${encodeURIComponent(state.selectedBook.id)}` : "/legacy/search.html"}">Continue learning</a>
           ${user.role === "admin" ? '<a class="legacy-admin-link" href="/admin">Admin console</a>' : ""}
           <button type="button" class="legacy-logout">Log out</button>
         </div>`;

@@ -3,137 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InRead | Test</title>
-  <link rel="stylesheet" href="styles.css?v=29">
+  <title>InRead | Book Check</title>
+  <link rel="stylesheet" href="styles.css?v=33">
 </head>
 <body data-page="test">
-  <div class="rotate-notice">
-    <div class="rotate-notice-card">
-      <div class="eyebrow" id="testRotateEyebrow">Tablet note</div>
-      <h3 id="testRotateTitle" style="margin-top: 16px;">Please rotate to landscape</h3>
-      <p id="testRotateCopy" class="lead compact">Landscape gives the test card and status panel more room. Phone portrait still works normally.</p>
-    </div>
-  </div>
-
-  <div class="app-shell">
-    <div class="frame">
-      <header class="topbar">
-        <div class="brand">
-          <span class="brand-mark">InRead Prototype</span>
-          <div class="brand-line">Read the book in front of you, not a giant word list.</div>
-        </div>
-        <div class="topbar-meta header-actions">
-          <button class="top-link lang-toggle" type="button" data-language-toggle>EN</button>
-          <a class="top-link" data-top-link="library" href="library.html">Full Library</a>
-        </div>
-      </header>
-
-      <main class="page">
-        <section class="card word-panel">
-          <div id="assessmentEntry" class="assessment-entry">
-            <span class="eyebrow" id="assessmentEyebrow">Choose your starting point</span>
-            <h2 id="assessmentTitle">Use a verified score, or take the quick check.</h2>
-            <p id="assessmentLead" class="lead compact">A recent TOEFL, IELTS, or CEFR result can give InRead a useful first reading boundary. You can always take the book check later.</p>
-            <div class="assessment-choice-grid">
-              <button class="assessment-choice is-selected" type="button" data-assessment-route="score">
-                <strong id="assessmentScoreOption">Use an existing score</strong>
-                <span id="assessmentScoreOptionHint">TOEFL, IELTS, or CEFR</span>
-              </button>
-              <button class="assessment-choice" type="button" data-assessment-route="test">
-                <strong id="assessmentTestOption">Take the book check</strong>
-                <span id="assessmentTestOptionHint">Answer a short adaptive word check</span>
-              </button>
-            </div>
-            <form id="externalScoreForm" class="external-score-form">
-              <label>
-                <span id="scoreTypeLabel">Score type</span>
-                <select id="scoreType" name="scoreType">
-                  <option value="toefl-ibt">TOEFL iBT (new)</option>
-                  <option value="toefl-pbt">TOEFL PBT (old)</option>
-                  <option value="ielts">IELTS</option>
-                  <option value="cefr">CEFR</option>
-                </select>
-              </label>
-              <label id="scoreNumberField">
-                <span id="scoreValueLabel">Your score</span>
-                <input id="scoreValue" name="scoreValue" type="number" min="0" max="120" step="1" inputmode="decimal" required>
-              </label>
-              <label id="cefrField" hidden>
-                <span id="cefrValueLabel">Your CEFR level</span>
-                <select id="cefrValue" name="cefrValue">
-                  <option value="A1">A1</option>
-                  <option value="A2">A2</option>
-                  <option value="B1">B1</option>
-                  <option value="B2" selected>B2</option>
-                  <option value="C1">C1</option>
-                  <option value="C2">C2</option>
-                </select>
-              </label>
-              <p id="scoreRangeHint" class="foot-note">TOEFL iBT: 0-120. We use it only as a starting estimate for book recommendations.</p>
-              <p id="scoreFormMessage" class="score-form-message" aria-live="polite"></p>
-              <button id="applyExternalScore" class="primary-btn" type="submit">Use this score for recommendations</button>
-            </form>
-          </div>
-
-          <div id="adaptiveTestContent" hidden>
-          <div>
-            <span class="eyebrow" id="testPageEyebrow">Readiness test</span>
-            <h2 id="testBookTitle">尚未开始测试</h2>
-            <p id="testIntro" class="lead compact">
-              This page diagnoses instead of teaching. Starting from medium-difficulty book words, it quickly estimates your reading boundary through "know" / "not sure" decisions.
-            </p>
-            <div class="progress">
-              <div id="progressFill" class="progress-fill"></div>
-            </div>
-          </div>
-
-          <div>
-            <span id="difficultyBadge" class="eyebrow">Waiting to start</span>
-            <div id="currentWord" class="word">InRead</div>
-            <p id="wordHint" class="word-meta">Meanings stay hidden by default so the diagnosis stays honest, instead of slipping back into "read the explanation first, then say I know it."</p>
-          </div>
-
-          <div>
-            <p id="adaptiveNote" class="foot-note">A "know" answer moves upward, while "not sure" moves downward. The goal is to find your boundary with fewer prompts.</p>
-            <div class="answer-row" style="margin-top: 18px;">
-              <button id="knowButton" class="primary-btn" type="button">I know it</button>
-              <button id="dontKnowButton" class="secondary-btn" type="button">Not sure</button>
-            </div>
-          </div>
-          </div>
-        </section>
-
-        <aside class="card soft">
-          <span class="eyebrow" id="testStatusEyebrow">Test status</span>
-          <div class="stats-grid">
-            <div class="stat-box">
-              <strong id="askedCount">0</strong>
-              <span id="testAskedLabel">Answered</span>
-            </div>
-            <div class="stat-box">
-              <strong id="knownCount">0</strong>
-              <span id="testKnownLabel">Known</span>
-            </div>
-            <div class="stat-box">
-              <strong id="unknownCount">0</strong>
-              <span id="testUnknownLabel">Unknown</span>
-            </div>
-          </div>
-
-          <div class="quote-box" style="margin-top: 18px;">
-            <strong id="testWhyTitle">Why keep this page minimal?</strong>
-            <p id="testWhyCopy" class="word-meta">Because the job here is to locate friction, not to teach every word immediately. First diagnose honestly, then keep only the most valuable words for the next step.</p>
-          </div>
-
-          <div class="small-actions button-row">
-            <button id="backToSearch" class="ghost-btn" type="button">Back to search</button>
-          </div>
-        </aside>
-      </main>
-    </div>
-  </div>
-
-  <script src="legacy-auth.js?v=29"></script>
-  <script src="app.js?v=29"></script>
+  <div class="rotate-notice"><div class="rotate-notice-card"><div class="eyebrow" id="testRotateEyebrow">Tablet note</div><h3 id="testRotateTitle" style="margin-top: 16px;">Please rotate to landscape</h3><p id="testRotateCopy" class="lead compact">Landscape gives the test card and status panel more room. Phone portrait still works normally.</p></div></div>
+  <div class="app-shell"><div class="frame">
+    <header class="topbar"><div class="brand"><span class="brand-mark">InRead Prototype</span><div class="brand-line">Read the book in front of you, not a giant word list.</div></div><div class="topbar-meta header-actions"><button class="top-link lang-toggle" type="button" data-language-toggle>EN</button><a class="top-link" data-top-link="library" href="library.html">Full Library</a></div></header>
+    <main class="page test-page">
+      <section class="card word-panel test-word-panel">
+        <div><span class="eyebrow" id="testPageEyebrow">Readiness test</span><h2 id="testBookTitle">Book check</h2><p id="testIntro" class="lead compact">Answer from memory. The example stays hidden until after your choice.</p><div class="progress"><div id="progressFill" class="progress-fill"></div></div></div>
+        <div class="test-question"><span id="difficultyBadge" class="eyebrow">Waiting to start</span><div id="currentWord" class="word">InRead</div><p id="wordHint" class="word-meta">Meanings and examples stay hidden until you make a choice.</p></div>
+        <div id="testAnswerArea" class="test-answer-area"><p id="adaptiveNote" class="foot-note">A "know" answer moves upward, while "not sure" moves downward.</p><div class="answer-row test-answer-row"><button id="knowButton" class="primary-btn" type="button">I know it</button><button id="dontKnowButton" class="secondary-btn" type="button">Not sure</button></div></div>
+        <div id="testFeedback" class="test-feedback" hidden><span class="eyebrow" id="feedbackEyebrow">Book context</span><p id="feedbackResult" class="lead compact"></p><div class="quote-box"><strong id="feedbackExampleLabel">Example in this book</strong><p id="feedbackSentence" class="word-meta"></p><p id="feedbackTranslation" class="word-meta feedback-translation"></p></div><button id="continueTestButton" class="primary-btn" type="button">Continue</button></div>
+      </section>
+      <aside class="card soft test-status-card"><span class="eyebrow" id="testStatusEyebrow">Test status</span><div class="stats-grid"><div class="stat-box"><strong id="askedCount">0</strong><span id="testAskedLabel">Answered</span></div><div class="stat-box"><strong id="knownCount">0</strong><span id="testKnownLabel">Known</span></div><div class="stat-box"><strong id="unknownCount">0</strong><span id="testUnknownLabel">Unknown</span></div></div><div class="quote-box"><strong id="testWhyTitle">Why keep this page minimal?</strong><p id="testWhyCopy" class="word-meta">First answer honestly. Then use one real sentence to reconnect the word with the book.</p></div><div class="small-actions button-row"><button id="backToSearch" class="ghost-btn" type="button">Back to search</button></div></aside>
+    </main>
+  </div></div>
+  <script src="legacy-auth.js?v=33"></script><script src="app.js?v=33"></script>
 </body>
 </html>

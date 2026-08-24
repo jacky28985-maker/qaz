@@ -44,7 +44,7 @@ function createAdmin() {
 function ensureStore() {
   fs.mkdirSync(dataDir, { recursive: true });
   if (!fs.existsSync(storePath)) {
-    const initial = { users: [createAdmin()], bannedIps: [] };
+    const initial = { users: [createAdmin()], bannedIps: [], annotations: [] };
     fs.writeFileSync(storePath, JSON.stringify(initial, null, 2), "utf8");
   }
 }
