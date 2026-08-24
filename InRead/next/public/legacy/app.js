@@ -8,6 +8,7 @@ const UNKNOWN_THRESHOLD = 24;
 const HIGH_FREQUENCY_LIMIT = 12;
 const SUGGESTION_LIMIT = 5;
 const STUDY_CARD_TYPES = ["zh_to_en_choice", "en_to_zh_choice", "zh_to_en_spell", "scene_to_en_choice", "scene_to_zh_choice"];
+const STUDY_ENGINE_VERSION = 2;
 
 const MATCH_FILL_CLASS = {
   relaxed: "match-fill-easy",
@@ -1552,6 +1553,9 @@ function defaultState() {
     planDays: 7,
     completion: [],
     studySession: null,
+    wordRecords: {},
+    planProgress: {},
+    trainingDay: 0,
     gateUnlocked: false,
     directChallenge: false,
     readerProfile: null,
@@ -1623,6 +1627,9 @@ function createFreshState(book, currentState = getState()) {
     planDays: 7,
     completion: [],
     studySession: null,
+    wordRecords: {},
+    planProgress: {},
+    trainingDay: 0,
     gateUnlocked: false,
     directChallenge: false
   };
@@ -1748,7 +1755,7 @@ function initResultPage() {
 }
 
 function initPlanPage() {
-  const state = getState();
+  const state = normalizeStudyState(getState());
   if (!state.selectedBook || !state.result) {
     go("search");
     return;
@@ -1758,7 +1765,12 @@ function initPlanPage() {
     return;
   }
 
-  ensurePlanForDays(state.planDays || 7);
+  if (isStudyInProgress(state)) {
+    renderPlanBlocked();
+    return;
+  }
+
+  if (!state.plan.length) ensurePlanForDays(state.planDays || 7);
   renderPlan();
   bindPlanConfigurator();
   document.getElementById("backToResult").addEventListener("click", () => go("result"));
@@ -1775,13 +1787,13 @@ function initPlanPage() {
 }
 
 function initStudyPage() {
-  const state = getState();
+  const state = normalizeStudyState(getState());
   if (!state.selectedBook || !state.result || !state.plan.length) {
     go("plan");
     return;
   }
 
-  if (!state.studySession || state.studySession.bookId !== state.selectedBook.id) {
+  if (!state.studySession || state.studySession.bookId !== state.selectedBook.id || state.studySession.version !== STUDY_ENGINE_VERSION) {
     const activeDay = getActivePlanDay(state);
     if (!activeDay) {
       go("gate");
@@ -2413,6 +2425,9 @@ function ensurePlanForDays(days) {
   state.plan = distributePlan(planWords, safeDays);
   state.completion = state.completion.filter((word) => plannedWordSet.has(word));
   state.studySession = null;
+  state.wordRecords = {};
+  state.planProgress = {};
+  state.trainingDay = 0;
   state.directChallenge = false;
   state.gateUnlocked = state.plan.length > 0 && state.completion.length === planWords.length;
   setState(state);
@@ -2645,34 +2660,35 @@ function updatePlanSliderValue(days, options = {}) {
 }
 
 function getBucketCompletion(bucket, state) {
-  const completed = bucket.tasks.filter((task) => state.completion.includes(task.word)).length;
+  const completed = bucket.tasks.filter((task) => state.wordRecords?.[task.word]?.t === 3).length;
   return {
     completed,
     total: bucket.tasks.length,
-    done: completed >= bucket.tasks.length
+    done: completed >= bucket.tasks.length,
+    introduced: Boolean(state.planProgress?.[bucket.day]?.introduced)
   };
 }
 
 function getActivePlanDay(state) {
-  const nextBucket = state.plan.find((bucket) => !getBucketCompletion(bucket, state).done);
-  return nextBucket?.day || null;
+  if (isStudyInProgress(state)) return state.studySession.day;
+  const nextIntroduction = state.plan.find((bucket) => !state.planProgress?.[bucket.day]?.introduced);
+  if (nextIntroduction) return nextIntroduction.day;
+  const dueDays = Object.values(state.wordRecords || {})
+    .filter((record) => record.t < 3 && Number.isFinite(record.dueDay))
+    .map((record) => record.dueDay);
+  return dueDays.length ? Math.max(state.trainingDay + 1, Math.min(...dueDays)) : null;
 }
 
 function startStudyDay(day, options = {}) {
-  const state = getState();
-  const bucket = state.plan.find((item) => item.day === day);
+  const state = normalizeStudyState(getState());
+  if (isStudyInProgress(state)) {
+    if (options.navigate !== false) go("study");
+    return;
+  }
   const activeDay = getActivePlanDay(state);
-  if (!bucket || !bucket.tasks.length) return;
-  if (activeDay && day > activeDay) return;
-
-  const shouldCreateFresh = !state.studySession
-    || state.studySession.bookId !== state.selectedBook?.id
-    || state.studySession.day !== day
-    || state.studySession.completed;
-
-  state.studySession = shouldCreateFresh
-    ? createStudySession(state.selectedBook.id, day, bucket.tasks)
-    : ensureStudyQuestion(state.studySession, state);
+  if (!activeDay || Number(day) !== activeDay) return;
+  state.trainingDay = Math.max(state.trainingDay, activeDay);
+  state.studySession = createStudySession(state, activeDay);
 
   setState(state);
 
@@ -2684,120 +2700,58 @@ function startStudyDay(day, options = {}) {
   go("study");
 }
 
-function createStudySession(bookId, day, tasks) {
+function createStudySession(state, day) {
+  const bucket = state.plan.find((item) => item.day === day);
+  const freshWords = bucket && !state.planProgress?.[day]?.introduced ? bucket.tasks.map((task) => task.word) : [];
+  if (freshWords.length) state.planProgress[day] = { introduced: true };
+  const reviewWords = Object.entries(state.wordRecords || {})
+    .filter(([, record]) => record.t < 3 && record.dueDay <= day)
+    .map(([word]) => word);
   const session = {
-    bookId,
+    version: STUDY_ENGINE_VERSION,
+    bookId: state.selectedBook.id,
     day,
-    turn: 0,
+    phase: freshWords.length ? "first" : "review",
+    firstQueue: freshWords,
+    secondQueue: [],
+    reviewQueue: reviewWords,
     answered: 0,
+    initialCount: freshWords.length + reviewWords.length,
     completed: false,
-    lastFeedback: null,
-    currentQuestion: null,
-    cards: tasks.map((task) => ({
-      word: task.word,
-      dueTurn: 0,
-      attempts: 0,
-      correctPasses: 0,
-      wrongCount: 0,
-      mastered: false
-    }))
+    currentQuestion: null
   };
-
-  return ensureStudyQuestion(session, getState());
-}
-
-function getStudyRequiredPasses(card) {
-  return 3 + Math.min(card.wrongCount, 3);
+  return ensureStudyQuestion(session, state);
 }
 
 function ensureStudyQuestion(session, state) {
   if (!session || session.completed || session.currentQuestion) return session;
-
-  const nextCard = selectNextStudyCard(session);
-  if (!nextCard) {
-    session.completed = true;
+  if (session.phase === "first" && session.firstQueue.length) {
+    const word = session.firstQueue[0];
+    session.currentQuestion = { type: "recognition", word, gloss: getWordGloss(word), item: findVocabularyItem(state, word) };
     return session;
   }
-
-  const nextType = STUDY_CARD_TYPES[session.turn % STUDY_CARD_TYPES.length];
-  session.currentQuestion = buildStudyQuestion(nextType, nextCard, state, session);
+  if (session.phase === "first") session.phase = "second";
+  if (session.phase === "second" && session.secondQueue.length) {
+    session.currentQuestion = buildRecallQuestion("second", session.secondQueue[0], state, session);
+    return session;
+  }
+  if (session.phase === "second") session.phase = "review";
+  if (session.phase === "review" && session.reviewQueue.length) {
+    session.currentQuestion = buildRecallQuestion("review", session.reviewQueue[0], state, session);
+    return session;
+  }
+  session.completed = true;
   return session;
 }
 
-function selectNextStudyCard(session) {
-  const candidates = session.cards
-    .filter((card) => !card.mastered)
-    .sort((left, right) => left.dueTurn - right.dueTurn || left.correctPasses - right.correctPasses || left.wrongCount - right.wrongCount);
-
-  return candidates[0] || null;
-}
-
-function buildStudyQuestion(type, card, state, session) {
-  const studyCopy = getCopy().study;
-  const wordItem = findVocabularyItem(state, card.word);
-  const gloss = getWordGloss(card.word);
-  const poolWords = getStudyPoolWords(state, session.day, card.word);
-
-  if (type === "zh_to_en_choice") {
-    return {
-      type,
-      word: card.word,
-      gloss,
-      answer: card.word,
-      badge: studyCopy.typeLabels[type],
-      prompt: studyCopy.promptLabels[type],
-      headline: gloss,
-      subline: wordItem ? translate(getCopy().plan.taskMeta, wordItem) : "",
-      options: buildChoiceOptions(poolWords, card.word, (word) => word)
-    };
-  }
-
-  if (type === "en_to_zh_choice") {
-    return {
-      type,
-      word: card.word,
-      gloss,
-      answer: gloss,
-      badge: studyCopy.typeLabels[type],
-      prompt: studyCopy.promptLabels[type],
-      headline: card.word,
-      subline: wordItem ? translate(getCopy().plan.taskMeta, wordItem) : "",
-      options: buildChoiceOptions(poolWords, card.word, (word) => getWordGloss(word))
-    };
-  }
-
-  if (type === "zh_to_en_spell") {
-    return {
-      type,
-      word: card.word,
-      gloss,
-      answer: card.word,
-      badge: studyCopy.typeLabels[type],
-      prompt: studyCopy.promptLabels[type],
-      headline: gloss,
-      subline: wordItem ? translate(getCopy().plan.taskMeta, wordItem) : "",
-      inputPlaceholder: studyCopy.inputPlaceholder
-    };
-  }
-
+function buildRecallQuestion(stage, word, state, session) {
+  const wordItem = findVocabularyItem(state, word);
   return {
-    type,
-    word: card.word,
-    gloss,
-    answer: type === "scene_to_en_choice" ? card.word : gloss,
-    badge: studyCopy.typeLabels[type],
-    prompt: studyCopy.promptLabels[type],
-    visual: {
-      title: studyCopy.sceneTitle,
-      label: translate(studyCopy.sceneLabel, { gloss }),
-      hue: hashWord(card.word)
-    },
-    subline: wordItem ? translate(getCopy().plan.taskMeta, wordItem) : "",
-    options: buildChoiceOptions(
-      poolWords,
-      card.word,
-      (word) => type === "scene_to_en_choice" ? word : getWordGloss(word)
-    )
+    type: stage === "second" ? "second-choice" : "review-choice",
+    word,
+    gloss: getWordGloss(word),
+    item: wordItem,
+    options: buildChoiceOptions(getStudyPoolWords(state, session.day, word), word, (candidate) => getWordGloss(candidate))
   };
 }
 
@@ -2828,7 +2782,9 @@ function getStudyPoolWords(state, day, currentWord) {
 }
 
 function findVocabularyItem(state, word) {
-  return state.selectedBook?.vocabulary?.find((item) => item.word === word) || null;
+  // Prefer the current built-in book data so existing accounts receive updated context sentences.
+  const currentBook = buildBooks().find((book) => book.id === state.selectedBook?.id) || state.selectedBook;
+  return currentBook?.vocabulary?.find((item) => item.word === word) || null;
 }
 
 function getWordGloss(word) {
@@ -2895,6 +2851,9 @@ function renderPlan() {
   const grid = document.getElementById("planGrid");
   grid.innerHTML = state.plan.map((bucket) => {
     const bucketStatus = getBucketCompletion(bucket, state);
+    const masteredWords = new Set(Object.entries(state.wordRecords || {})
+      .filter(([, record]) => record.t === 3)
+      .map(([word]) => word));
     const isActive = activeDay === bucket.day;
     const isLocked = activeDay !== null && bucket.day > activeDay && !bucketStatus.done;
     const badgeCopy = bucketStatus.done
@@ -2920,11 +2879,11 @@ function renderPlan() {
             <summary>${escapeHtml(planCopy.viewWords)}</summary>
             <div class="task-list">
               ${bucket.tasks.map((task) => `
-                <div class="task ${state.completion.includes(task.word) ? "task-complete" : ""}">
+                <div class="task ${masteredWords.has(task.word) ? "task-complete" : ""}">
                   <div class="task-top">
                     <strong>${task.word}</strong>
-                    <span class="task-status-chip ${state.completion.includes(task.word) ? "task-status-chip-done" : ""}">
-                      ${escapeHtml(state.completion.includes(task.word) ? planCopy.done : getWordGloss(task.word))}
+                    <span class="task-status-chip ${masteredWords.has(task.word) ? "task-status-chip-done" : ""}">
+                      ${escapeHtml(masteredWords.has(task.word) ? planCopy.done : getWordGloss(task.word))}
                     </span>
                   </div>
                   <p class="task-meta">${escapeHtml(translate(planCopy.taskMeta, {
@@ -3141,6 +3100,216 @@ function normalizeStudyAnswer(value) {
   return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+// 2.4 uses a book-first, spaced-review flow. The plan never contains live answer data.
+function trainingCopy() {
+  return currentLanguage === "zh" ? {
+    day: (day) => `第 ${day} 天训练`, first: "第一轮：快速判断", firstPrompt: "你认识这个词吗？先凭直觉判断。",
+    knows: "认识", doesNotKnow: "不认识", example: "书内语境例句", translation: "中文翻译", confirm: "确认释义",
+    confirmPrompt: "确认释义后，它会在下一训练日进入第一次复习。", continue: "继续", second: "第二轮：辨认学习",
+    secondPrompt: "选择最贴切的中文释义。答案会立即反馈。", review: "间隔复习", reviewPrompt: "选择最贴切的中文释义。连续答对会延长下一次复习间隔。",
+    correct: "回答正确。", incorrect: "回答错误，记忆计数已重置为 t = 0。", scheduled: "已安排到下一训练日复习。",
+    complete: "本次训练已完成", completeCopy: "训练结果已保存。下一次训练会按 1 天、2 天、4 天的间隔安排复习。",
+    back: "返回找书", status: "本次状态", progress: (done, total) => `已完成 ${done} / ${total} 个训练步骤`, reviewed: "已答题", mastered: "本轮掌握", remaining: "待处理",
+    planBlocked: "训练进行中，计划内容已暂时隐藏", planBlockedCopy: "为了避免提前看到单词释义或答案，请先完成当前训练。你的进度已自动保存。", resume: "继续当前训练"
+  } : {
+    day: (day) => `Training day ${day}`, first: "First pass: quick recognition", firstPrompt: "Do you recognize this word? Trust your first impression.",
+    knows: "I know it", doesNotKnow: "I don't know it", example: "Book-context sentence", translation: "Chinese translation", confirm: "Confirm the meaning",
+    confirmPrompt: "After confirmation, it will return on the next training day for its first review.", continue: "Continue", second: "Second pass: meaning check",
+    secondPrompt: "Choose the closest Chinese meaning. You will see the result immediately.", review: "Spaced review", reviewPrompt: "Choose the closest Chinese meaning. Each correct answer extends the next interval.",
+    correct: "Correct.", incorrect: "Not quite. The memory count has reset to t = 0.", scheduled: "Scheduled for the next training day.",
+    complete: "This training session is complete", completeCopy: "Your result is saved. Reviews will return on the 1-day, 2-day, and 4-day rhythm.",
+    back: "Back to books", status: "Session status", progress: (done, total) => `${done} / ${total} training steps complete`, reviewed: "Answered", mastered: "Mastered", remaining: "Remaining",
+    planBlocked: "Your active training keeps the plan private", planBlockedCopy: "Finish the current training before reopening the plan, so no word meaning or answer is revealed ahead of time. Your progress is already saved.", resume: "Resume training"
+  };
+}
+
+function renderPlanBlocked() {
+  const shell = document.querySelector(".plan-shell");
+  if (!shell) return;
+  const copy = trainingCopy();
+  shell.innerHTML = `
+    <span class="eyebrow">InRead 2.4</span>
+    <h2>${escapeHtml(copy.planBlocked)}</h2>
+    <p class="lead compact">${escapeHtml(copy.planBlockedCopy)}</p>
+    <div class="plan-blocked-card">
+      <span class="plan-blocked-lock" aria-hidden="true">&#128274;</span>
+      <strong>${escapeHtml(currentLanguage === "zh" ? "计划将在训练结束后恢复显示" : "The plan reopens after this session")}</strong>
+      <p>${escapeHtml(currentLanguage === "zh" ? "这能让每次判断都基于真实记忆，而不是提前获得答案。" : "This keeps each decision based on recall rather than a previewed answer.")}</p>
+      <button id="resumeStudy" class="primary-btn" type="button">${escapeHtml(copy.resume)}</button>
+    </div>`;
+  document.getElementById("resumeStudy")?.addEventListener("click", () => go("study"));
+}
+
+function renderStudy() {
+  const state = normalizeStudyState(getState());
+  const session = state.studySession;
+  if (!session || session.version !== STUDY_ENGINE_VERSION) {
+    go("plan");
+    return;
+  }
+  ensureStudyQuestion(session, state);
+  setState(state);
+
+  const copy = trainingCopy();
+  const records = Object.values(state.wordRecords || {});
+  const mastered = records.filter((record) => record.t === 3).length;
+  const remaining = (session.firstQueue.length + session.secondQueue.length + session.reviewQueue.length) + (session.currentQuestion ? 1 : 0);
+  const done = session.answered;
+  const total = Math.max(session.initialCount, done + remaining, 1);
+  document.getElementById("studyTitle").textContent = copy.day(session.day);
+  document.getElementById("studyBookLabel").textContent = state.selectedBook.title;
+  document.getElementById("studyProgressCopy").textContent = copy.progress(done, total);
+  document.getElementById("studyProgressFill").style.width = `${Math.min(100, Math.round((done / total) * 100))}%`;
+  document.getElementById("studyRoundCount").textContent = String(done);
+  document.getElementById("studyMasteredCount").textContent = String(mastered);
+  document.getElementById("studyLeftCount").textContent = String(Math.max(remaining - 1, 0));
+  document.getElementById("studyRoundLabel").textContent = copy.reviewed;
+  document.getElementById("studyMasteredLabel").textContent = copy.mastered;
+  document.getElementById("studyLeftLabel").textContent = copy.remaining;
+  document.getElementById("studyStatusEyebrow").textContent = copy.status;
+  document.getElementById("studyExit").textContent = copy.back;
+  document.getElementById("studyExit").onclick = () => go("search");
+
+  const question = session.currentQuestion;
+  const badge = document.getElementById("studyTypeBadge");
+  const prompt = document.getElementById("studyPrompt");
+  const surface = document.getElementById("studyQuestionSurface");
+  const answers = document.getElementById("studyAnswerArea");
+  if (!question || session.completed) {
+    badge.textContent = "InRead 2.4";
+    prompt.textContent = copy.complete;
+    surface.innerHTML = `<div class="study-complete-card"><strong>${escapeHtml(copy.complete)}</strong><p>${escapeHtml(copy.completeCopy)}</p></div>`;
+    answers.innerHTML = `<button class="primary-btn" type="button" data-study-finish>${escapeHtml(copy.back)}</button>`;
+    answers.querySelector("[data-study-finish]").addEventListener("click", () => go("search"));
+    return;
+  }
+  if (question.type === "recognition") {
+    badge.textContent = copy.first;
+    prompt.textContent = copy.firstPrompt;
+    surface.innerHTML = renderRecognitionSurface(question, copy);
+    answers.innerHTML = `<div class="study-recognition-actions"><button class="primary-btn" type="button" data-recognizes="true">${escapeHtml(copy.knows)}</button><button class="ghost-btn" type="button" data-recognizes="false">${escapeHtml(copy.doesNotKnow)}</button></div>`;
+    answers.querySelectorAll("[data-recognizes]").forEach((button) => button.addEventListener("click", () => chooseRecognition(button.dataset.recognizes === "true")));
+    return;
+  }
+  if (question.type === "recognition-confirm") {
+    badge.textContent = copy.confirm;
+    prompt.textContent = copy.confirmPrompt;
+    surface.innerHTML = `<div class="study-word-card"><div class="word">${escapeHtml(question.word)}</div><p class="study-definition">${escapeHtml(question.gloss)}</p></div>`;
+    answers.innerHTML = `<button class="primary-btn" type="button" data-study-next>${escapeHtml(copy.continue)}</button>`;
+    answers.querySelector("[data-study-next]").addEventListener("click", finishRecognitionConfirm);
+    return;
+  }
+  const isSecond = question.type === "second-choice";
+  badge.textContent = isSecond ? copy.second : copy.review;
+  prompt.textContent = isSecond ? copy.secondPrompt : copy.reviewPrompt;
+  surface.innerHTML = `<div class="study-word-card"><div class="word">${escapeHtml(question.word)}</div><p class="word-meta">${escapeHtml(question.item ? `Chapter ${question.item.chapter}` : "")}</p></div>`;
+  answers.innerHTML = renderRecallAnswers(question, copy);
+  if (question.feedback) {
+    answers.querySelector("[data-study-next]").addEventListener("click", advanceRecall);
+  } else {
+    answers.querySelectorAll("[data-study-choice]").forEach((button) => button.addEventListener("click", () => submitRecall(decodeURIComponent(button.dataset.studyChoice || ""))));
+  }
+}
+
+function renderRecognitionSurface(question, copy) {
+  const item = question.item || {};
+  return `<div class="study-word-card study-context-card"><div class="word">${escapeHtml(question.word)}</div><div class="study-context"><strong>${escapeHtml(copy.example)}</strong><p>${escapeHtml(item.sentenceEn || `In ${getState().selectedBook.title}, ${question.word} appears in a key reading moment.`)}</p><strong>${escapeHtml(copy.translation)}</strong><p>${escapeHtml(item.sentenceZh || `在《${getState().selectedBook.title}》的阅读语境中，这个词出现在理解情节的关键处。`)}</p></div></div>`;
+}
+
+function renderRecallAnswers(question, copy) {
+  const feedback = question.feedback;
+  return `<div class="study-choice-grid">${question.options.map((option) => {
+    const selected = feedback?.selected === option.value;
+    const stateClass = feedback ? (option.correct ? "is-correct" : selected ? "is-wrong" : "is-muted") : "";
+    const marker = feedback ? (option.correct ? " &#10003;" : selected ? " &#10005;" : "") : "";
+    return `<button class="secondary-btn study-choice-btn ${stateClass}" type="button" ${feedback ? "disabled" : ""} data-study-choice="${encodeURIComponent(option.value)}">${escapeHtml(option.value)}${marker}</button>`;
+  }).join("")}</div>${feedback ? `<div class="study-feedback ${feedback.correct ? "is-correct" : "is-wrong"}">${escapeHtml(feedback.correct ? copy.correct : copy.incorrect)}<span>${escapeHtml(feedback.note)}</span></div><button class="primary-btn" type="button" data-study-next>${escapeHtml(copy.continue)}</button>` : ""}`;
+}
+
+function chooseRecognition(known) {
+  const state = normalizeStudyState(getState());
+  const session = state.studySession;
+  const question = session?.currentQuestion;
+  if (!session || !question || question.type !== "recognition") return;
+  if (known) {
+    question.type = "recognition-confirm";
+  } else {
+    session.firstQueue.shift();
+    session.secondQueue.push(question.word);
+    session.currentQuestion = null;
+  }
+  setState(state);
+  renderStudy();
+}
+
+function finishRecognitionConfirm() {
+  const state = normalizeStudyState(getState());
+  const session = state.studySession;
+  const question = session?.currentQuestion;
+  if (!session || !question || question.type !== "recognition-confirm") return;
+  scheduleFirstReview(state, question.word, session.day);
+  session.firstQueue.shift();
+  session.answered += 1;
+  session.currentQuestion = null;
+  setState(state);
+  renderStudy();
+}
+
+function submitRecall(answer) {
+  const state = normalizeStudyState(getState());
+  const session = state.studySession;
+  const question = session?.currentQuestion;
+  if (!session || !question || question.feedback) return;
+  const correct = normalizeStudyAnswer(answer) === normalizeStudyAnswer(question.gloss);
+  if (question.type === "second-choice") scheduleFirstReview(state, question.word, session.day);
+  else updateReviewRecord(state, question.word, session.day, correct);
+  question.feedback = { correct, selected: answer, note: question.type === "second-choice" ? trainingCopy().scheduled : getReviewNote(state.wordRecords[question.word]) };
+  setState(state);
+  renderStudy();
+}
+
+function advanceRecall() {
+  const state = normalizeStudyState(getState());
+  const session = state.studySession;
+  const question = session?.currentQuestion;
+  if (!session || !question?.feedback) return;
+  if (question.type === "second-choice") session.secondQueue.shift();
+  else session.reviewQueue.shift();
+  session.answered += 1;
+  session.currentQuestion = null;
+  ensureStudyQuestion(session, state);
+  setState(state);
+  renderStudy();
+}
+
+function scheduleFirstReview(state, word, day) {
+  state.wordRecords[word] = { t: 0, dueDay: day + 1, introducedDay: day };
+}
+
+function updateReviewRecord(state, word, day, correct) {
+  const record = state.wordRecords[word] || { t: 0, dueDay: day, introducedDay: day };
+  if (!correct) {
+    record.t = 0;
+    record.dueDay = day + 1;
+  } else {
+    record.t += 1;
+    record.dueDay = record.t === 1 ? day + 1 : record.t === 2 ? day + 2 : day + 4;
+    if (record.t >= 3) {
+      record.t = 3;
+      if (!state.completion.includes(word)) state.completion.push(word);
+    }
+  }
+  state.wordRecords[word] = record;
+  const totalPlanWords = state.plan.flatMap((bucket) => bucket.tasks).length;
+  state.gateUnlocked = totalPlanWords > 0 && state.completion.length === totalPlanWords;
+}
+
+function getReviewNote(record) {
+  if (!record) return "";
+  if (record.t === 3) return currentLanguage === "zh" ? "该词已完成本轮 3 次连续正确复习。" : "This word has completed 3 consecutive successful reviews.";
+  return currentLanguage === "zh" ? `当前 t = ${record.t}，下一次将在第 ${record.dueDay} 天出现。` : `Current t = ${record.t}; it returns on training day ${record.dueDay}.`;
+}
+
 function renderGate() {
   const state = getState();
   const gateCopy = getCopy().gate;
@@ -3245,15 +3414,33 @@ function escapeHtml(text) {
 }
 
 function createVocabularyList(entries, title) {
+  const classicSentence = getClassicBookSentence(title);
   return entries.map(([word, difficulty, frequency, chapter], index) => ({
     word,
     difficulty,
     frequency,
     chapter,
-    sentenceEn: `In the demo reading context of "${title}", ${word} appears in a sentence that directly affects comprehension. The point is not isolated memorization, but helping you return to the text faster.`,
-    sentenceZh: `在《${title}》的演示书内场景中，${word} 出现在推动理解的关键语句里，目的不是脱离语境死记，而是帮助你更快回到阅读本身。`,
+    sentenceEn: classicSentence.en,
+    sentenceZh: classicSentence.zh,
     order: index + 1
   }));
+}
+
+function getClassicBookSentence(title) {
+  const sentences = {
+    "The Great Gatsby": { en: "So we beat on, boats against the current, borne back ceaselessly into the past.", zh: "于是我们奋力前行，逆水行舟，却不断被往昔推回。" },
+    "Harry Potter and the Sorcerer's Stone": { en: "It does not do to dwell on dreams and forget to live.", zh: "沉湎于梦想而忘记生活，是没有意义的。" },
+    "Pride and Prejudice": { en: "It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.", zh: "有钱的单身汉总要娶妻，这是一条举世公认的真理。" },
+    "Charlotte's Web": { en: "After all, what’s a life, anyway? We’re born, we live a little while, we die.", zh: "说到底，生命是什么呢？我们出生，活一小段时间，然后离开。" },
+    "The Hobbit": { en: "In a hole in the ground there lived a hobbit.", zh: "地洞里住着一个霍比特人。" },
+    "The Giver": { en: "When people have the freedom to choose, they choose wrong.", zh: "当人们拥有选择的自由时，他们往往会做出错误的选择。" },
+    "Percy Jackson and the Lightning Thief": { en: "Look, I didn’t want to be a half-blood.", zh: "听着，我并不想成为一个混血者。" },
+    "The Old Man and the Sea": { en: "But man is not made for defeat. A man can be destroyed but not defeated.", zh: "人不是为失败而生的。一个人可以被毁灭，但不能被打败。" }
+  };
+  return sentences[title] || {
+    en: `A key line in ${title} gives this word a living reading context.`,
+    zh: `《${title}》中的关键语句为这个词提供了真实的阅读语境。`
+  };
 }
 
 function getVocabularySentence(item) {

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InRead | Trainer</title>
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=24">
 </head>
 <body data-page="study">
   <div class="rotate-notice">
@@ -74,19 +74,13 @@
                   </div>
                 </div>
 
-                <div class="quote-box">
-                  <strong id="studyRuleTitle">Why this trainer repeats words</strong>
-                  <p id="studyRuleCopy" class="word-meta">Every word must survive at least three correct passes. Wrong answers re-enter sooner, so weak words stay visible without turning the whole plan into mass memorization.</p>
-                </div>
-
-                <div class="study-checklist-wrap">
-                  <span class="eyebrow" id="studyChecklistTitle">Today's checklist</span>
-                  <div id="studyChecklist" class="task-list"></div>
+                <div class="quote-box study-rule-card">
+                  <strong>1 day · 2 days · 4 days</strong>
+                  <p class="word-meta">Three consecutive successful reviews complete this round. A wrong answer resets the count and returns the word to the next training day.</p>
                 </div>
 
                 <div class="small-actions button-row">
-                  <button id="studyBackToPlan" class="ghost-btn" type="button">Back to plan</button>
-                  <button id="studyGotoGate" class="secondary-btn" type="button">View reading access</button>
+                  <button id="studyExit" class="ghost-btn" type="button">Back to books</button>
                 </div>
               </div>
             </div>
@@ -96,7 +90,7 @@
     </div>
   </div>
 
-  <script src="legacy-auth.js?v=21"></script>
-  <script src="app.js?v=20"></script>
+  <script src="legacy-auth.js?v=24"></script>
+  <script src="app.js?v=24"></script>
 </body>
 </html>
