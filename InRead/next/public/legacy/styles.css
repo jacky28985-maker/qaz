@@ -114,6 +114,30 @@ body {
   scroll-behavior: smooth;
 }
 
+html {
+  scrollbar-color: var(--line-strong) var(--bg);
+  scrollbar-width: thin;
+}
+
+html::-webkit-scrollbar {
+  width: 10px;
+}
+
+html::-webkit-scrollbar-track {
+  background: var(--bg);
+  border-left: 1px solid var(--frame-border);
+}
+
+html::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border: 3px solid var(--bg);
+  border-radius: 999px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
 body {
   font-family: var(--sans-font);
   background: var(--page-bg);
@@ -1014,14 +1038,20 @@ button:disabled {
 
 .library-card-actions {
   display: grid;
-  min-width: 118px;
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 152px;
   gap: 8px;
   justify-items: stretch;
 }
 
 .library-card-actions .primary-btn {
   min-height: 42px;
-  white-space: nowrap;
+  min-width: 0;
+  padding: 10px 12px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .library-card-top,
@@ -1031,6 +1061,15 @@ button:disabled {
   justify-content: space-between;
   gap: 14px;
   align-items: start;
+}
+
+.library-card-bottom {
+  align-items: center;
+}
+
+.library-card-bottom > .word-meta {
+  min-width: 0;
+  flex: 1 1 0;
 }
 
 .library-vocab {
@@ -1440,6 +1479,28 @@ html[data-theme="aurora"] .match-fill-unknown {
   background: var(--surface);
 }
 
+.feedback-meaning {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 2px 2px 0;
+}
+
+.feedback-meaning strong {
+  color: var(--muted);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.feedback-meaning p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .feedback-translation {
   margin: 10px 0 0;
 }
@@ -1539,6 +1600,78 @@ body[data-auto-scroll="true"][data-page="test"] .page {
 
 .plan-builder-head strong {
   font-size: 1rem;
+}
+
+.plan-mode-card {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface-soft);
+}
+
+.plan-mode-card h3 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+}
+
+.plan-mode-card > p {
+  margin: 0;
+}
+
+.plan-mode-options {
+  display: grid;
+  gap: 10px;
+}
+
+.plan-mode-option {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  padding: 16px 17px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.plan-mode-option:hover,
+.plan-mode-option.is-selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 14%, transparent);
+  transform: translateY(-1px);
+}
+
+.plan-mode-option strong {
+  font-size: 1rem;
+}
+
+.plan-mode-option span {
+  color: var(--muted);
+  font-size: .84rem;
+  line-height: 1.55;
+}
+
+.study-completion-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+.study-completion-actions button {
+  width: 100%;
+}
+
+.study-review-next {
+  margin-bottom: 0;
+  color: var(--accent);
+  font-weight: 700;
 }
 
 .plan-slider-value-input {
@@ -2489,6 +2622,10 @@ body[data-viewport-profile="desktop-compact"] .step:hover {
 
   .study-spell-row {
     flex-direction: column;
+  }
+
+  .study-completion-actions {
+    grid-template-columns: 1fr;
   }
 
   .plan-grid-compact {

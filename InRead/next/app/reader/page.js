@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ThemeControl } from "../theme-control";
 import "./reader.css";
 
 const emptyProgress = { chapter: 1, readChapters: [], privateNotes: [] };
@@ -116,7 +117,7 @@ export default function ReaderPage() {
   const chapterNotes = (progress.privateNotes || []).filter((item) => item.chapter === chapter?.chapter).slice(-3);
 
   return <main className="reader-page">
-    <header className="reader-nav"><a className="reader-wordmark" href="/legacy/library.html">InRead</a><a className="reader-back" href="/legacy/library.html">Back to library</a></header>
+    <header className="reader-nav"><a className="reader-wordmark" href="/legacy/library.html">InRead</a><div className="reader-nav-actions"><ThemeControl /><a className="reader-back" href="/legacy/library.html">Back to library</a></div></header>
     {message && <p className="reader-message" role="status">{message}</p>}
     {!chapter ? <p className="reader-message">Loading your server-cached chapter...</p> : <div className="reader-layout">
       <aside className="reader-rail">

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InRead | Plan</title>
-  <link rel="stylesheet" href="styles.css?v=28">
+  <link rel="stylesheet" href="styles.css?v=30">
 </head>
 <body data-page="plan">
   <div class="rotate-notice">
@@ -38,7 +38,23 @@
 
           <div class="plan-main-grid">
             <div class="plan-overview-column">
-              <div class="plan-builder-card">
+              <div class="plan-mode-card" id="planModeCard">
+                <span class="eyebrow" id="planModeEyebrow">Task arrangement</span>
+                <h3 id="planModeTitle">请选择任务安排的方式</h3>
+                <p id="planModeLead" class="word-meta">选择后，InRead 会按你的目标生成不同的个性化任务节奏。</p>
+                <div class="plan-mode-options">
+                  <button class="plan-mode-option" type="button" data-plan-mode="training">
+                    <strong id="planTrainingModeTitle">按训练天数完成</strong>
+                    <span id="planTrainingModeCopy">以完成词汇训练为目标，按天数均衡安排。</span>
+                  </button>
+                  <button class="plan-mode-option" type="button" data-plan-mode="reading">
+                    <strong id="planReadingModeTitle">按阅读天数读完本书</strong>
+                    <span id="planReadingModeCopy">以连续阅读为目标，按页或章节安排个人未掌握的词。</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="plan-builder-card hidden" id="planBuilderCard">
                 <div class="plan-builder-head">
                   <strong id="planSliderTitle">Choose how many days you want to train</strong>
                   <input id="planSliderValue" class="day-badge plan-slider-value-input" type="number" min="1" max="30" step="1" value="7" inputmode="numeric" aria-label="Plan days">
@@ -99,7 +115,7 @@
     </div>
   </div>
 
-  <script src="legacy-auth.js?v=24"></script>
-  <script src="app.js?v=28"></script>
+  <script src="legacy-auth.js?v=44"></script>
+  <script src="app.js?v=45"></script>
 </body>
 </html>

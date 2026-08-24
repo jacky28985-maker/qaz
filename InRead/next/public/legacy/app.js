@@ -651,7 +651,7 @@ const COPY = {
       noneCopy: "You are already close enough to direct reading that a larger word list would pull you away from the product's original purpose.",
       noPlan: "No plan needed",
       generatePlan: "Generate study plan",
-      chapterMeta: ({ frequency, difficulty, chapter }) => `Frequency ${frequency} / Difficulty ${difficulty} / Around chapter ${chapter}.`
+      chapterMeta: ({ frequency, difficulty, chapter, page }) => `Frequency ${frequency} / Difficulty ${difficulty} / Page ${page}, chapter ${chapter}.`
     },
     test: {
       difficulty: ({ difficulty }) => `Difficulty ${difficulty} / 5`,
@@ -671,7 +671,7 @@ const COPY = {
       summaryEmpty: "Move the slider to generate a pacing summary for this book.",
       minutes: ({ minutes }) => `${minutes} min`,
       done: "Mastered",
-      taskMeta: ({ chapter, frequency, difficulty }) => `Around chapter ${chapter} / Frequency ${frequency} / Difficulty ${difficulty}`,
+      taskMeta: ({ chapter, page, frequency, difficulty }) => `Page ${page} / Chapter ${chapter} / Frequency ${frequency} / Difficulty ${difficulty}`,
       startToday: "Start today's training",
       continueToday: "Continue today's training",
       completedDay: "Completed",
@@ -846,7 +846,7 @@ const COPY = {
       noneCopy: "你已经足够接近直接阅读的状态，继续背更大的词表反而偏离这个产品的初衷。",
       noPlan: "无需生成计划",
       generatePlan: "生成背诵计划",
-      chapterMeta: ({ frequency, difficulty, chapter }) => `频次 ${frequency} / 难度 ${difficulty} / 第 ${chapter} 章附近。`
+      chapterMeta: ({ frequency, difficulty, chapter, page }) => `频次 ${frequency} / 难度 ${difficulty} / 第 ${page} 页（第 ${chapter} 章）。`
     },
     test: {
       difficulty: ({ difficulty }) => `难度 ${difficulty} / 5`,
@@ -866,7 +866,7 @@ const COPY = {
       summaryEmpty: "拖动天数条后，这里会显示本书的节奏摘要。",
       minutes: ({ minutes }) => `${minutes} 分钟`,
       done: "已掌握",
-      taskMeta: ({ chapter, frequency, difficulty }) => `第 ${chapter} 章附近 / 频次 ${frequency} / 难度 ${difficulty}`,
+      taskMeta: ({ chapter, page, frequency, difficulty }) => `第 ${page} 页（第 ${chapter} 章）/ 频次 ${frequency} / 难度 ${difficulty}`,
       startToday: "开始今天训练",
       continueToday: "继续今天训练",
       completedDay: "已完成",
@@ -1018,7 +1018,7 @@ const STATIC_COPY = {
         ".brand-line": "Read the book in front of you, not a giant word list.",
         "#resultRotateEyebrow": "Tablet note",
         "#resultRotateTitle": "Please rotate to landscape",
-        "#resultRotateCopy": "Landscape makes the result overview and unknown-word list easier to scan. Phone portrait still works normally.",
+        "#resultRotateCopy": "Landscape makes the result overview easier to scan. Phone portrait still works normally.",
         "#resultPageEyebrow": "Recommendation result",
         "#resultTitle": "How much vocabulary friction still stands between you and this book?",
         "#resultUnknownLabel": "Unknown words in this book",
@@ -1167,7 +1167,7 @@ const STATIC_COPY = {
         ".brand-line": "不背海量词，只读眼前书",
         "#resultRotateEyebrow": "平板使用提示",
         "#resultRotateTitle": "建议旋转到横屏",
-        "#resultRotateCopy": "横屏时结果概览和未知词列表会更清晰。手机纵向仍可正常查看。",
+        "#resultRotateCopy": "横屏时结果概览会更清晰。手机纵向仍可正常查看。",
         "#resultPageEyebrow": "结果判定",
         "#resultTitle": "你和这本书之间，还差多少词汇障碍？",
         "#resultUnknownLabel": "本书未知词数",
@@ -1328,7 +1328,7 @@ const EXTERNAL_ASSESSMENT_COPY = {
     cefrLead: "独立的 15-20 分钟测试会将可信的 CEFR 结果回写到你的阅读档案。",
     scoreOption: "使用已有成绩",
     scoreOptionHint: "新/老托福、雅思或 CEFR",
-    testOption: "完成图书测词",
+    testOption: "完成测词后进行背词",
     testOptionHint: "回答一组简短的自适应词汇题",
     cefrOption: "使用我们的 CEFR 测试工具",
     cefrOptionHint: "自适应难度 · 约 15-20 分钟",
@@ -1951,12 +1951,17 @@ function initAssessmentPage() {
       return;
     }
     const state = getState();
-    state.readerProfile = profile;
-    state.result = null;
-    state.plan = [];
-    state.studySession = null;
-    setState(state);
-    go("library", { assessment: "external" });
+    if (!state.selectedBook) {
+      state.readerProfile = profile;
+      setState(state);
+      go("library", { assessment: "external" });
+      return;
+    }
+
+    // A declared score is enough to build a small, book-specific preparation list.
+    // It is deliberately capped so this path never becomes a generic word list.
+    setState(prepareVocabularyPlan(state, profile, { source: "external-score" }));
+    go("plan");
   });
 
   document.getElementById("startBookTestButton").addEventListener("click", () => go(selectedAssessmentRoute === "cefr" ? "cefr-test" : "test"));
@@ -1996,8 +2001,7 @@ function buildExternalReaderProfile(type, rawScore) {
 }
 
 function initCefrToolPage() {
-  // Keep the CEFR experience on InRead's origin so the signed-in account can receive the verified result.
-  window.location.replace("/api/cefr");
+  window.location.replace("/cefr");
 }
 
 function initResultPage() {
@@ -2024,18 +2028,18 @@ function initPlanPage() {
     go("search");
     return;
   }
-  if (!shouldOfferPlan(state.result)) {
-    go("result");
-    return;
-  }
-
   if (isStudyInProgress(state)) {
     renderPlanBlocked();
     return;
   }
 
-  if (!state.plan.length) ensurePlanForDays(state.planDays || 7);
+  // Existing plans keep their original pacing; fresh plans start by asking
+  // whether the reader is optimizing for training completion or reading flow.
+  if (!state.planMode && state.plan.length) state.planMode = "training";
+  if (state.planMode && !state.plan.length) ensurePlanForDays(getSelectedPlanDays(state));
+  setState(state);
   renderPlan();
+  bindPlanModeSelector();
   bindPlanConfigurator();
   document.getElementById("backToResult").addEventListener("click", () => go("result"));
   document.getElementById("gotoGate").addEventListener("click", () => go("gate"));
@@ -2547,11 +2551,17 @@ function continueTestAnswer() {
   const exhaustedWords = state.visitedWords.length >= state.orderedWords.length;
   delete state.pendingTestAnswer;
   if (reachedThreshold || exhaustedWords) {
-    state.result = buildResult(state.unknownWords.length);
-    state.readerProfile = deriveReaderProfile(state);
+    const readerProfile = deriveReaderProfile({ ...state, result: buildResult(state.unknownWords.length) });
+    const planWords = state.unknownWords.length
+      ? state.unknownWords
+      : selectVocabularyPlanWords(state.selectedBook, readerProfile, 6);
+    Object.assign(state, prepareVocabularyPlan(state, readerProfile, {
+      source: "book-check",
+      words: planWords
+    }));
     state.currentIndex = null;
     setState(state);
-    go("result");
+    go("plan");
     return;
   }
 
@@ -2589,12 +2599,9 @@ function renderTest() {
   window.requestAnimationFrame(syncViewportProfile);
   if (!pending) return;
 
-  const isKnown = pending.isKnown;
   const zh = currentLanguage === "zh";
-  document.getElementById("feedbackEyebrow").textContent = zh ? "书内语境" : "Book context";
-  document.getElementById("feedbackResult").textContent = zh
-    ? (isKnown ? `你选择了“认识” ${currentWord.word}。看看它在书中的语境。` : `你选择了“不认识 / 模糊” ${currentWord.word}。先把它放回书中理解。`)
-    : (isKnown ? `You marked “${currentWord.word}” as known. See it in the book context.` : `You marked “${currentWord.word}” as unsure. See it in the book context.`);
+  document.getElementById("feedbackMeaningLabel").textContent = zh ? "中文释义" : "Chinese meaning";
+  document.getElementById("feedbackMeaning").textContent = getWordGloss(currentWord.word);
   document.getElementById("feedbackExampleLabel").textContent = zh ? "书内例句" : "Example in this book";
   document.getElementById("feedbackSentence").textContent = currentWord.sentenceEn || currentWord.sentence || "";
   document.getElementById("feedbackTranslation").textContent = currentWord.sentenceZh || "";
@@ -2616,6 +2623,49 @@ function findNextIndex(state, step) {
   }
 
   return 0;
+}
+
+function selectVocabularyPlanWords(book, profile, minimumWords = 8) {
+  if (!book?.vocabulary?.length) return [];
+
+  const estimatedVocab = Number(profile?.estimatedVocab) || book.recommendedRange[0];
+  const vocabularyGap = Math.max(0, book.recommendedRange[0] - estimatedVocab);
+  const wordCount = clamp(Math.max(minimumWords, 8 + Math.ceil(vocabularyGap / 180)), 1, book.vocabulary.length);
+
+  return [...book.vocabulary]
+    .sort((a, b) => b.frequency - a.frequency || b.difficulty - a.difficulty || a.chapter - b.chapter)
+    .slice(0, wordCount);
+}
+
+function prepareVocabularyPlan(state, profile, options = {}) {
+  const book = state.selectedBook;
+  const selectedWords = options.words?.length
+    ? [...options.words]
+    : selectVocabularyPlanWords(book, profile);
+  const result = buildResult(selectedWords.length);
+
+  return {
+    ...state,
+    readerProfile: profile,
+    unknownWords: selectedWords,
+    result,
+    plan: [],
+    planDays: state.planDays || 7,
+    readingDays: state.readingDays || 7,
+    planMode: null,
+    completion: [],
+    studySession: null,
+    wordRecords: {},
+    planProgress: {},
+    trainingDay: 0,
+    gateUnlocked: false,
+    directChallenge: false,
+    readerAccess: {
+      source: options.source || "assessment",
+      matchKey: getBookMatchKey(book, profile)
+    },
+    vocabularyPlanSource: options.source || "assessment"
+  };
 }
 
 function buildResult(unknownCount) {
@@ -2674,26 +2724,29 @@ function renderResult(state = getState()) {
   document.getElementById("levelDescription").textContent = readiness.description;
   document.getElementById("resultPhilosophy").textContent = readiness.philosophy;
 
-  const sortedUnknown = [...state.unknownWords].sort((a, b) => b.frequency - a.frequency || a.chapter - b.chapter);
   const list = document.getElementById("unknownWordList");
-  list.innerHTML = sortedUnknown.length
-    ? sortedUnknown.map((item) => `
+  if (list) {
+    const sortedUnknown = [...state.unknownWords].sort((a, b) => b.frequency - a.frequency || a.chapter - b.chapter);
+    list.innerHTML = sortedUnknown.length
+      ? sortedUnknown.map((item) => `
+          <div class="word-item">
+            <strong>${item.word}</strong>
+            <p class="word-meta">${escapeHtml(translate(resultCopy.chapterMeta, {
+              frequency: item.frequency,
+              difficulty: item.difficulty,
+              chapter: item.chapter,
+              page: getWordPage(item)
+            }))}</p>
+            <p class="word-meta">${escapeHtml(getVocabularySentence(item))}</p>
+          </div>
+        `).join("")
+      : `
         <div class="word-item">
-          <strong>${item.word}</strong>
-          <p class="word-meta">${escapeHtml(translate(resultCopy.chapterMeta, {
-            frequency: item.frequency,
-            difficulty: item.difficulty,
-            chapter: item.chapter
-          }))}</p>
-          <p class="word-meta">${escapeHtml(getVocabularySentence(item))}</p>
+          <strong>${escapeHtml(resultCopy.noneTitle)}</strong>
+          <p class="word-meta">${escapeHtml(resultCopy.noneCopy)}</p>
         </div>
-      `).join("")
-    : `
-      <div class="word-item">
-        <strong>${escapeHtml(resultCopy.noneTitle)}</strong>
-        <p class="word-meta">${escapeHtml(resultCopy.noneCopy)}</p>
-      </div>
-    `;
+      `;
+  }
 
   const planButton = document.getElementById("planButton");
   const directReadButton = document.getElementById("directReadButton");
@@ -2717,8 +2770,10 @@ function renderResult(state = getState()) {
 
 function generatePlanFromResult() {
   const state = getState();
-  if (!state.result || !shouldOfferPlan(state.result)) return;
+  if (!state.result) return;
   state.planDays = state.planDays || 7;
+  state.readingDays = state.readingDays || 7;
+  state.planMode = null;
   state.plan = [];
   state.completion = [];
   state.studySession = null;
@@ -2729,28 +2784,80 @@ function generatePlanFromResult() {
 }
 
 function getPlanWords(state) {
-  if (state.result.level === "L2") {
-    return [...state.unknownWords].sort((a, b) => a.chapter - b.chapter || b.frequency - a.frequency);
-  }
-
   return [...state.unknownWords]
-    .sort((a, b) => b.frequency - a.frequency || a.chapter - b.chapter);
+    .sort((a, b) => getWordPage(a) - getWordPage(b) || b.frequency - a.frequency || a.difficulty - b.difficulty);
+}
+
+function getSelectedPlanDays(state) {
+  return state.planMode === "reading" ? state.readingDays : state.planDays;
+}
+
+function getPlanModeCopy(mode = null) {
+  const zh = currentLanguage === "zh";
+  const copy = {
+    initial: {
+      title: zh ? "请选择任务安排的方式" : "Choose how you want to arrange this plan",
+      lead: zh
+        ? "选择后，InRead 会按你的目标生成不同的个性化任务节奏。"
+        : "Choose a goal first. InRead will create a different personal rhythm for each path."
+    },
+    training: {
+      title: zh ? "按训练天数完成" : "Finish by training days",
+      lead: zh
+        ? "以完成词汇训练为目标，按天数均衡安排。"
+        : "Finish the vocabulary preparation in a chosen number of balanced training days.",
+      sliderTitle: zh ? "选择你想用多少天完成训练" : "Choose how many days you want to train",
+      sliderHint: zh
+        ? "停止拖动后，InRead 会重新计算每天的词数与预计训练时长。"
+        : "When you stop sliding, InRead recalculates the daily word count and estimated study time.",
+      dayLabel: zh ? "训练天数" : "Training days",
+      dailyLabel: zh ? "每天词数" : "Words per day"
+    },
+    reading: {
+      title: zh ? "按阅读天数读完本书" : "Finish this book by reading days",
+      lead: zh
+        ? "以连续阅读为目标，尽量按完整页段安排你尚未掌握的词。"
+        : "Prioritize uninterrupted reading by grouping your unmastered words into continuous page ranges.",
+      sliderTitle: zh ? "选择你想用多少天读完本书" : "Choose how many days you want to finish this book",
+      sliderHint: zh
+        ? "系统会按连续页段分配你的障碍词，尽量不在故事进行中打断；每天词数可能不同。"
+        : "InRead keeps page ranges together where possible, so daily word counts may vary without breaking the reading flow.",
+      dayLabel: zh ? "阅读天数" : "Reading days",
+      dailyLabel: zh ? "每日词数范围" : "Daily word range"
+    }
+  };
+  return copy[mode || "initial"];
+}
+
+function getWordPage(item) {
+  if (Number.isFinite(Number(item?.page))) return Math.max(1, Number(item.page));
+  // Older saved plans did not include page metadata. Use their chapter opening
+  // as a stable page anchor so no existing account needs its plan reset.
+  return (Math.max(1, Number(item?.chapter) || 1) - 1) * 3 + 1;
 }
 
 function getPlanDayLimit(state) {
-  return Math.max(getPlanWords(state).length, 1);
+  const words = getPlanWords(state);
+  if (state.planMode === "reading") {
+    return Math.max(new Set(words.map((word) => getWordPage(word))).size, 1);
+  }
+  return Math.max(words.length, 1);
 }
 
 function ensurePlanForDays(days) {
   const state = getState();
-  if (!state.result || !shouldOfferPlan(state.result)) return state;
+  if (!state.result || !state.planMode) return state;
 
   const planWords = getPlanWords(state);
-  const safeDays = clamp(Number(days) || state.planDays || 7, 1, Math.max(planWords.length, 1));
+  const dayLimit = getPlanDayLimit(state);
+  const safeDays = clamp(Number(days) || getSelectedPlanDays(state) || 7, 1, dayLimit);
   const plannedWordSet = new Set(planWords.map((word) => word.word));
 
-  state.planDays = safeDays;
-  state.plan = distributePlan(planWords, safeDays);
+  if (state.planMode === "reading") state.readingDays = safeDays;
+  else state.planDays = safeDays;
+  state.plan = state.planMode === "reading"
+    ? distributeReadingPlan(planWords, safeDays)
+    : distributePlan(planWords, safeDays);
   state.completion = state.completion.filter((word) => plannedWordSet.has(word));
   state.studySession = null;
   state.wordRecords = {};
@@ -2760,6 +2867,31 @@ function ensurePlanForDays(days) {
   state.gateUnlocked = state.plan.length > 0 && state.completion.length === planWords.length;
   setState(state);
   return state;
+}
+
+function bindPlanModeSelector() {
+  const card = document.getElementById("planModeCard");
+  if (!card || card.dataset.bound === "true") return;
+  card.dataset.bound = "true";
+
+  card.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target.closest("[data-plan-mode]") : null;
+    const mode = target?.dataset.planMode;
+    if (mode !== "training" && mode !== "reading") return;
+
+    const state = getState();
+    if (state.planMode === mode && state.plan.length) return;
+    state.planMode = mode;
+    state.plan = [];
+    state.completion = [];
+    state.studySession = null;
+    state.wordRecords = {};
+    state.planProgress = {};
+    state.trainingDay = 0;
+    setState(state);
+    ensurePlanForDays(getSelectedPlanDays(state));
+    renderPlan();
+  });
 }
 
 function bindPlanConfigurator() {
@@ -2772,7 +2904,7 @@ function bindPlanConfigurator() {
     const sliderMax = Number(slider.max) || 1;
     const trimmed = String(rawValue ?? "").trim();
     if (!trimmed) {
-      return allowEmpty ? null : clamp(Number(getState().planDays || slider.value || 1), 1, sliderMax);
+      return allowEmpty ? null : clamp(Number(getSelectedPlanDays(getState()) || slider.value || 1), 1, sliderMax);
     }
 
     const parsedValue = Number(trimmed);
@@ -2799,7 +2931,7 @@ function bindPlanConfigurator() {
   };
 
   const restoreCommittedDays = () => {
-    const committedDays = clamp(Number(getState().planDays || slider.value || 1), 1, Number(slider.max) || 1);
+    const committedDays = clamp(Number(getSelectedPlanDays(getState()) || slider.value || 1), 1, Number(slider.max) || 1);
     setPlanSliderPosition(slider, committedDays);
     dayInput.dataset.editing = "false";
     updatePlanSliderValue(committedDays, { force: true });
@@ -2921,11 +3053,65 @@ function openBookRecommendation(book) {
 }
 
 function distributePlan(words, days) {
-  const buckets = Array.from({ length: days }, (_, index) => ({ day: index + 1, tasks: [] }));
-  words.forEach((word, index) => {
-    buckets[index % days].tasks.push(word);
+  const bucketCount = Math.min(Math.max(days, 1), words.length);
+  const buckets = Array.from({ length: bucketCount }, (_, index) => ({ day: index + 1, tasks: [] }));
+  const baseSize = Math.floor(words.length / bucketCount);
+  const remainder = words.length % bucketCount;
+  let cursor = 0;
+  buckets.forEach((bucket, index) => {
+    const size = baseSize + (index < remainder ? 1 : 0);
+    bucket.tasks = words.slice(cursor, cursor + size);
+    cursor += size;
   });
-  return buckets.filter((bucket) => bucket.tasks.length > 0);
+  return buckets;
+}
+
+function distributeReadingPlan(words, days) {
+  if (!words.length) return [];
+  const pageGroups = [];
+  words.forEach((word) => {
+    const page = getWordPage(word);
+    const previous = pageGroups[pageGroups.length - 1];
+    if (previous && previous.page === page) previous.tasks.push(word);
+    else pageGroups.push({ page, tasks: [word] });
+  });
+
+  const bucketCount = Math.min(Math.max(days, 1), pageGroups.length);
+  const buckets = [];
+  let groupIndex = 0;
+  let remainingWords = words.length;
+
+  for (let index = 0; index < bucketCount; index += 1) {
+    const remainingBuckets = bucketCount - index;
+    const targetWords = Math.max(1, Math.round(remainingWords / remainingBuckets));
+    const groups = [];
+    let bucketWords = 0;
+
+    while (groupIndex < pageGroups.length) {
+      const group = pageGroups[groupIndex];
+      const groupsLeftAfter = pageGroups.length - groupIndex - 1;
+      const mustLeaveGroups = remainingBuckets - 1;
+      const wouldOvershoot = groups.length > 0 && bucketWords + group.tasks.length > targetWords;
+      if (wouldOvershoot && groupsLeftAfter >= mustLeaveGroups) break;
+      groups.push(group);
+      bucketWords += group.tasks.length;
+      groupIndex += 1;
+      if (groupsLeftAfter < mustLeaveGroups) break;
+    }
+
+    const tasks = groups.flatMap((group) => group.tasks);
+    remainingWords -= tasks.length;
+    buckets.push({
+      day: index + 1,
+      tasks,
+      pageStart: groups[0]?.page || 1,
+      pageEnd: groups[groups.length - 1]?.page || groups[0]?.page || 1,
+      chapterStart: groups[0]?.tasks[0]?.chapter || 1,
+      chapterEnd: groups[groups.length - 1]?.tasks.at(-1)?.chapter || groups[0]?.tasks[0]?.chapter || 1
+    });
+  }
+
+  return buckets;
 }
 
 function estimateMinutesForWords(wordCount) {
@@ -3064,6 +3250,41 @@ function getActivePlanDay(state) {
   return dueDays.length ? Math.max(state.trainingDay + 1, Math.min(...dueDays)) : null;
 }
 
+function getReadableChapter(state) {
+  const records = state.wordRecords || {};
+  const wordsByChapter = new Map();
+  getPlanWords(state).forEach((word) => {
+    const chapter = Number(word.chapter) || 1;
+    const words = wordsByChapter.get(chapter) || [];
+    words.push(word);
+    wordsByChapter.set(chapter, words);
+  });
+
+  let readableChapter = 0;
+  for (const chapter of [...wordsByChapter.keys()].sort((a, b) => a - b)) {
+    if (!wordsByChapter.get(chapter).every((word) => records[word.word]?.t === 3)) break;
+    readableChapter = chapter;
+  }
+  return readableChapter;
+}
+
+function getReadablePage(state) {
+  const records = state.wordRecords || {};
+  const wordsByPage = new Map();
+  getPlanWords(state).forEach((word) => {
+    const page = getWordPage(word);
+    const words = wordsByPage.get(page) || [];
+    words.push(word);
+    wordsByPage.set(page, words);
+  });
+  const pages = [...wordsByPage.keys()].sort((a, b) => a - b);
+  if (!pages.length) return 0;
+  const firstBlockedPage = pages.find((page) => !wordsByPage.get(page).every((word) => records[word.word]?.t === 3));
+  if (firstBlockedPage) return Math.max(0, firstBlockedPage - 1);
+  const maxChapter = Math.max(...getPlanWords(state).map((word) => Number(word.chapter) || 1));
+  return maxChapter * 3;
+}
+
 function startStudyDay(day, options = {}) {
   const state = normalizeStudyState(getState());
   if (isStudyInProgress(state)) {
@@ -3096,7 +3317,9 @@ function createStudySession(state, day) {
     version: STUDY_ENGINE_VERSION,
     bookId: state.selectedBook.id,
     day,
-    phase: freshWords.length ? "first" : "review",
+    // Due reviews always come before newly introduced words, so moving to the
+    // next day never silently trades spaced repetition for fresh vocabulary.
+    phase: reviewWords.length ? "review" : "first",
     firstQueue: freshWords,
     secondQueue: [],
     reviewQueue: reviewWords,
@@ -3110,6 +3333,11 @@ function createStudySession(state, day) {
 
 function ensureStudyQuestion(session, state) {
   if (!session || session.completed || session.currentQuestion) return session;
+  if (session.phase === "review" && session.reviewQueue.length) {
+    session.currentQuestion = buildRecallQuestion("review", session.reviewQueue[0], state, session);
+    return session;
+  }
+  if (session.phase === "review") session.phase = "first";
   if (session.phase === "first" && session.firstQueue.length) {
     const word = session.firstQueue[0];
     session.currentQuestion = { type: "recognition", word, gloss: getWordGloss(word), item: findVocabularyItem(state, word) };
@@ -3118,11 +3346,6 @@ function ensureStudyQuestion(session, state) {
   if (session.phase === "first") session.phase = "second";
   if (session.phase === "second" && session.secondQueue.length) {
     session.currentQuestion = buildRecallQuestion("second", session.secondQueue[0], state, session);
-    return session;
-  }
-  if (session.phase === "second") session.phase = "review";
-  if (session.phase === "review" && session.reviewQueue.length) {
-    session.currentQuestion = buildRecallQuestion("review", session.reviewQueue[0], state, session);
     return session;
   }
   session.completed = true;
@@ -3189,13 +3412,37 @@ function getStudyProgressRatio(session) {
 function renderPlan() {
   const state = getState();
   const planCopy = getCopy().plan;
+  const modeCopy = getPlanModeCopy(state.planMode);
+  const hasMode = state.planMode === "training" || state.planMode === "reading";
   const total = state.plan.flatMap((bucket) => bucket.tasks).length;
-  const selectedDays = state.planDays || 7;
+  const selectedDays = getSelectedPlanDays(state) || 7;
   const sliderMax = getPlanDayLimit(state);
+  const dailyCounts = state.plan.map((bucket) => bucket.tasks.length);
   const dailyWords = total ? Math.ceil(total / Math.max(selectedDays, 1)) : 0;
+  const minDailyWords = dailyCounts.length ? Math.min(...dailyCounts) : 0;
+  const maxDailyWords = dailyCounts.length ? Math.max(...dailyCounts) : 0;
   const dailyMinutes = estimateMinutesForWords(dailyWords);
   const totalMinutes = estimateMinutesForWords(total);
   const activeDay = getActivePlanDay(state);
+
+  const builderCard = document.getElementById("planBuilderCard");
+  builderCard?.classList.toggle("hidden", !hasMode);
+  document.querySelectorAll("[data-plan-mode]").forEach((button) => {
+    button.classList.toggle("is-selected", button.dataset.planMode === state.planMode);
+  });
+  const trainingModeCopy = getPlanModeCopy("training");
+  const readingModeCopy = getPlanModeCopy("reading");
+  const trainingTitle = document.getElementById("planTrainingModeTitle");
+  const trainingLead = document.getElementById("planTrainingModeCopy");
+  const readingTitle = document.getElementById("planReadingModeTitle");
+  const readingLead = document.getElementById("planReadingModeCopy");
+  if (trainingTitle) trainingTitle.textContent = trainingModeCopy.title;
+  if (trainingLead) trainingLead.textContent = trainingModeCopy.lead;
+  if (readingTitle) readingTitle.textContent = readingModeCopy.title;
+  if (readingLead) readingLead.textContent = readingModeCopy.lead;
+  document.getElementById("planModeTitle").textContent = modeCopy.title;
+  document.getElementById("planModeLead").textContent = modeCopy.lead;
+  document.getElementById("planSliderTitle").textContent = hasMode ? modeCopy.sliderTitle : planCopy.sliderTitle;
 
   const slider = document.getElementById("daysSlider");
   const dayInput = document.getElementById("planSliderValue");
@@ -3204,7 +3451,7 @@ function renderPlan() {
     slider.min = "1";
     slider.max = String(sliderMax);
     setPlanSliderPosition(slider, clamp(selectedDays, 1, sliderMax));
-    requestAnimationFrame(() => setPlanSliderPosition(slider, clamp(getState().planDays || selectedDays, 1, sliderMax)));
+    requestAnimationFrame(() => setPlanSliderPosition(slider, clamp(getSelectedPlanDays(getState()) || selectedDays, 1, sliderMax)));
   }
   if (dayInput) {
     dayInput.min = "1";
@@ -3212,31 +3459,39 @@ function renderPlan() {
   }
   renderPlanSliderScale(sliderMax);
   updatePlanSliderValue(selectedDays, { force: true });
-  document.getElementById("planSliderHint").textContent = planCopy.sliderHint;
-  document.getElementById("planSummary").textContent = total
-    ? translate(planCopy.summary, {
-      days: selectedDays,
-      dailyWords,
-      dailyMinutes,
-      totalMinutes
-    })
-    : planCopy.summaryEmpty;
+  document.getElementById("planSliderHint").textContent = hasMode ? modeCopy.sliderHint : planCopy.summaryEmpty;
+  document.getElementById("planSummary").textContent = !hasMode
+    ? (currentLanguage === "zh" ? "先选择上方的一种任务安排方式，再生成专属于这本书的计划。" : "Choose a task arrangement above to generate a plan for this book.")
+    : total
+      ? state.planMode === "reading"
+        ? (currentLanguage === "zh"
+          ? `为了在 ${selectedDays} 天内读完本书，系统会按连续页段安排任务。每天约 ${minDailyWords}–${maxDailyWords} 个个人障碍词；全程预计约 ${totalMinutes} 分钟训练。`
+          : `To finish this book in ${selectedDays} days, the plan keeps continuous page ranges together. Daily personal blockers range from ${minDailyWords} to ${maxDailyWords} words; total training time is about ${totalMinutes} minutes.`)
+        : translate(planCopy.summary, { days: selectedDays, dailyWords, dailyMinutes, totalMinutes })
+      : planCopy.summaryEmpty;
 
   document.getElementById("planWordCount").textContent = String(total);
   document.getElementById("planDayCount").textContent = String(selectedDays);
-  document.getElementById("planDailyWordCount").textContent = String(dailyWords);
+  document.getElementById("planDailyWordCount").textContent = state.planMode === "reading" && total
+    ? `${minDailyWords}-${maxDailyWords}`
+    : String(dailyWords);
   document.getElementById("planDailyTime").textContent = translate(planCopy.minutes, { minutes: dailyMinutes });
+  document.getElementById("planDayLabel").textContent = hasMode ? modeCopy.dayLabel : planCopy.dayLabel;
+  document.getElementById("planDailyWordLabel").textContent = hasMode ? modeCopy.dailyLabel : planCopy.dailyWordLabel;
   document.getElementById("planRuleCopy").textContent = planCopy.rule;
 
   const primaryStudyButton = document.getElementById("startTodayStudy");
   if (primaryStudyButton) {
     const isContinuing = !!state.studySession && !state.studySession.completed && state.studySession.day === activeDay;
     primaryStudyButton.textContent = isContinuing ? planCopy.continueToday : planCopy.startToday;
-    primaryStudyButton.disabled = !activeDay;
+    primaryStudyButton.disabled = !hasMode || !activeDay;
+    primaryStudyButton.classList.toggle("hidden", !hasMode);
   }
 
   const grid = document.getElementById("planGrid");
-  grid.innerHTML = state.plan.map((bucket) => {
+  grid.innerHTML = !hasMode
+    ? `<p class="word-meta">${escapeHtml(currentLanguage === "zh" ? "选择计划方式后，这里会显示每天的连续阅读任务。" : "Your daily reading tasks will appear here after you choose a plan mode.")}</p>`
+    : state.plan.map((bucket) => {
     const bucketStatus = getBucketCompletion(bucket, state);
     const masteredWords = new Set(Object.entries(state.wordRecords || {})
       .filter(([, record]) => record.t === 3)
@@ -3254,6 +3509,7 @@ function renderPlan() {
         <div class="day-head">
           <div class="stack" style="gap: 6px;">
             <strong>${escapeHtml(translate(planCopy.day, { day: bucket.day }))}</strong>
+            ${state.planMode === "reading" ? `<span class="task-meta">${escapeHtml(currentLanguage === "zh" ? `第 ${bucket.pageStart}–${bucket.pageEnd} 页` : `Pages ${bucket.pageStart}-${bucket.pageEnd}`)}</span>` : ""}
             <span class="task-meta">${escapeHtml(translate(planCopy.progress, { done: bucketStatus.completed, total: bucketStatus.total }))}</span>
           </div>
           <div class="day-head-meta">
@@ -3275,6 +3531,7 @@ function renderPlan() {
                   </div>
                   <p class="task-meta">${escapeHtml(translate(planCopy.taskMeta, {
                     chapter: task.chapter,
+                    page: getWordPage(task),
                     frequency: task.frequency,
                     difficulty: task.difficulty
                   }))}</p>
@@ -3350,6 +3607,7 @@ function renderStudy() {
       </div>
       <p class="task-meta">${escapeHtml(translate(getCopy().plan.taskMeta, {
         chapter: task.chapter,
+        page: getWordPage(task),
         frequency: task.frequency,
         difficulty: task.difficulty
       }))}</p>
@@ -3496,6 +3754,7 @@ function trainingCopy() {
     secondPrompt: "选择最贴切的中文释义。答案会立即反馈。", review: "间隔复习", reviewPrompt: "选择最贴切的中文释义。连续答对会延长下一次复习间隔。",
     correct: "回答正确。", incorrect: "回答错误，记忆计数已重置为 t = 0。", scheduled: "已安排到下一训练日复习。",
     complete: "本次训练已完成", completeCopy: "训练结果已保存。下一次训练会按 1 天、2 天、4 天的间隔安排复习。",
+    reviewNext: (count, day) => `复习不会跳过：第 ${day} 天会先安排 ${count} 个到期词复习，再进入当天的新词。`, continueNext: (day) => `继续第 ${day} 天训练`, viewPlan: "查看当前训练计划",
     back: "返回找书", status: "本次状态", progress: (done, total) => `已完成 ${done} / ${total} 个训练步骤`, reviewed: "已答题", mastered: "本轮掌握", remaining: "待处理",
     planBlocked: "训练进行中，计划内容已暂时隐藏", planBlockedCopy: "为了避免提前看到单词释义或答案，请先完成当前训练。你的进度已自动保存。", resume: "继续当前训练"
   } : {
@@ -3505,6 +3764,7 @@ function trainingCopy() {
     secondPrompt: "Choose the closest Chinese meaning. You will see the result immediately.", review: "Spaced review", reviewPrompt: "Choose the closest Chinese meaning. Each correct answer extends the next interval.",
     correct: "Correct.", incorrect: "Not quite. The memory count has reset to t = 0.", scheduled: "Scheduled for the next training day.",
     complete: "This training session is complete", completeCopy: "Your result is saved. Reviews will return on the 1-day, 2-day, and 4-day rhythm.",
+    reviewNext: (count, day) => `Reviews stay in the flow: day ${day} begins with ${count} due review words before new vocabulary.`, continueNext: (day) => `Continue day ${day} training`, viewPlan: "View current study plan",
     back: "Back to books", status: "Session status", progress: (done, total) => `${done} / ${total} training steps complete`, reviewed: "Answered", mastered: "Mastered", remaining: "Remaining",
     planBlocked: "Your active training keeps the plan private", planBlockedCopy: "Finish the current training before reopening the plan, so no word meaning or answer is revealed ahead of time. Your progress is already saved.", resume: "Resume training"
   };
@@ -3563,10 +3823,26 @@ function renderStudy() {
   const surface = document.getElementById("studyQuestionSurface");
   const answers = document.getElementById("studyAnswerArea");
   if (!question || session.completed) {
+    const readablePage = getReadablePage(state);
+    const readableChapter = Math.ceil(readablePage / 3);
+    const chapterNote = readablePage
+      ? (currentLanguage === "zh"
+        ? `根据你已经背完的词，现在可以阅读本书至第 ${readablePage} 页（第 ${readableChapter} 章）。`
+        : `Based on the words you have mastered, you can now read through page ${readablePage} (chapter ${readableChapter}).`)
+      : (currentLanguage === "zh"
+        ? "今天的训练已完成；继续完成后续复习，即可逐页解锁阅读。"
+        : "Today's training is complete. Continue the scheduled reviews to unlock reading page by page.");
     badge.textContent = "InRead 2.4";
     prompt.textContent = copy.complete;
-    surface.innerHTML = `<div class="study-complete-card"><strong>${escapeHtml(copy.complete)}</strong><p>${escapeHtml(copy.completeCopy)}</p></div>`;
-    answers.innerHTML = `<button class="primary-btn" type="button" data-study-finish>${escapeHtml(copy.back)}</button>`;
+    const nextDay = getActivePlanDay(state);
+    const dueReviews = Object.values(state.wordRecords || {}).filter((record) => record.t < 3 && Number(record.dueDay) <= Number(nextDay)).length;
+    const reviewNote = nextDay && dueReviews
+      ? copy.reviewNext(dueReviews, nextDay)
+      : "";
+    surface.innerHTML = `<div class="study-complete-card"><strong>${escapeHtml(copy.complete)}</strong><p>${escapeHtml(copy.completeCopy)}</p><p>${escapeHtml(chapterNote)}</p>${reviewNote ? `<p class="study-review-next">${escapeHtml(reviewNote)}</p>` : ""}</div>`;
+    answers.innerHTML = `<div class="study-completion-actions">${nextDay ? `<button class="primary-btn" type="button" data-study-next-day>${escapeHtml(copy.continueNext(nextDay))}</button>` : ""}<button class="secondary-btn" type="button" data-study-plan>${escapeHtml(copy.viewPlan)}</button><button class="ghost-btn" type="button" data-study-finish>${escapeHtml(copy.back)}</button></div>`;
+    answers.querySelector("[data-study-next-day]")?.addEventListener("click", () => startStudyDay(nextDay));
+    answers.querySelector("[data-study-plan]")?.addEventListener("click", () => go("plan"));
     answers.querySelector("[data-study-finish]").addEventListener("click", () => go("search"));
     return;
   }
@@ -3581,7 +3857,8 @@ function renderStudy() {
   if (question.type === "recognition-confirm") {
     badge.textContent = copy.confirm;
     prompt.textContent = copy.confirmPrompt;
-    surface.innerHTML = `<div class="study-word-card"><div class="word">${escapeHtml(question.word)}</div><p class="study-definition">${escapeHtml(question.gloss)}</p></div>`;
+    const item = question.item || {};
+    surface.innerHTML = `<div class="study-word-card study-context-card"><div class="word">${escapeHtml(question.word)}</div><p class="study-definition">${escapeHtml(question.gloss)}</p><div class="study-context"><strong>${escapeHtml(copy.example)}</strong><p>${escapeHtml(item.sentenceEn || "")}</p><strong>${escapeHtml(copy.translation)}</strong><p>${escapeHtml(item.sentenceZh || "")}</p></div></div>`;
     answers.innerHTML = `<button class="primary-btn" type="button" data-study-next>${escapeHtml(copy.continue)}</button>`;
     answers.querySelector("[data-study-next]").addEventListener("click", finishRecognitionConfirm);
     return;
@@ -3618,13 +3895,8 @@ function chooseRecognition(known) {
   const session = state.studySession;
   const question = session?.currentQuestion;
   if (!session || !question || question.type !== "recognition") return;
-  if (known) {
-    question.type = "recognition-confirm";
-  } else {
-    session.firstQueue.shift();
-    session.secondQueue.push(question.word);
-    session.currentQuestion = null;
-  }
+  question.type = "recognition-confirm";
+  question.known = known;
   setState(state);
   renderStudy();
 }
@@ -3634,7 +3906,8 @@ function finishRecognitionConfirm() {
   const session = state.studySession;
   const question = session?.currentQuestion;
   if (!session || !question || question.type !== "recognition-confirm") return;
-  scheduleFirstReview(state, question.word, session.day);
+  if (question.known) scheduleFirstReview(state, question.word, session.day);
+  else session.secondQueue.push(question.word);
   session.firstQueue.shift();
   session.answered += 1;
   session.currentQuestion = null;
@@ -3713,6 +3986,28 @@ function renderGate() {
   gateStateLabel.classList.remove("success", "tone-positive", "tone-balanced", "tone-caution", "tone-warning", "tone-danger", "tone-neutral");
   renderGateGuide(state.result?.tierKey || null);
 
+  if (!state.result && state.readerAccess?.source === "assessment") {
+    const match = getBookMatch(state.selectedBook, state.readerProfile);
+    const highRisk = match.key === "demanding" || match.key === "not_yet";
+    const tone = highRisk ? "danger" : match.key === "stretch" ? "caution" : "positive";
+    gateStateLabel.textContent = highRisk ? `🔒 ${match.label}` : match.label;
+    gateStateLabel.classList.add(`tone-${tone}`);
+    gateMessage.textContent = currentLanguage === "zh"
+      ? `根据你刚刚填写的成绩，《${state.selectedBook.title}》的建议是：${match.hint}`
+      : `Based on the score you just entered, the recommendation for "${state.selectedBook.title}" is: ${match.hint}`;
+    gateReasonLabel.textContent = match.label;
+    gateActionLabel.textContent = highRisk
+      ? (currentLanguage === "zh" ? "先测词或直接挑战" : "Test first or challenge directly")
+      : (currentLanguage === "zh" ? "可以开始阅读" : "Ready to start reading");
+    gateTestButton.textContent = currentLanguage === "zh" ? "完成测词后进行背词" : "Complete word check, then start vocabulary study";
+    gateReadButton.textContent = highRisk
+      ? (currentLanguage === "zh" ? "仍要继续阅读" : "Continue anyway")
+      : (currentLanguage === "zh" ? "开始阅读" : "Start reading");
+    gateTestButton.classList.remove("hidden");
+    gateReadButton.classList.remove("hidden");
+    return;
+  }
+
   if (!state.result && state.readerAccess?.source === "library") {
     const match = getBookMatch(state.selectedBook, state.readerProfile);
     gateStateLabel.textContent = currentLanguage === "zh" ? "🔒 当前不建议阅读" : "🔒 Not recommended right now";
@@ -3722,7 +4017,7 @@ function renderGate() {
       : `"${state.selectedBook.title}" will likely create substantial reading pressure right now. Take its word check first, or continue despite the risk.`;
     gateReasonLabel.textContent = match.label;
     gateActionLabel.textContent = currentLanguage === "zh" ? "先测词或继续阅读" : "Test first or continue";
-    gateTestButton.textContent = currentLanguage === "zh" ? "完成图书测词" : "Take book check";
+    gateTestButton.textContent = currentLanguage === "zh" ? "完成测词后进行背词" : "Complete word check, then start vocabulary study";
     gateReadButton.textContent = currentLanguage === "zh" ? "仍要继续阅读" : "Continue anyway";
     gateTestButton.classList.remove("hidden");
     gateReadButton.classList.remove("hidden");
@@ -3828,15 +4123,23 @@ function escapeHtml(text) {
 
 function createVocabularyList(entries, title) {
   const classicSentence = getClassicBookSentence(title);
-  return entries.map(([word, difficulty, frequency, chapter], index) => ({
-    word,
-    difficulty,
-    frequency,
-    chapter,
-    sentenceEn: classicSentence.en,
-    sentenceZh: classicSentence.zh,
-    order: index + 1
-  }));
+  const chapterWordCount = new Map();
+  return entries.map(([word, difficulty, frequency, chapter], index) => {
+    const indexInChapter = chapterWordCount.get(chapter) || 0;
+    chapterWordCount.set(chapter, indexInChapter + 1);
+    return {
+      word,
+      difficulty,
+      frequency,
+      chapter,
+      // Three virtual reading pages per chapter keep page positions stable as
+      // the server-cached reading editions gain more source text.
+      page: (chapter - 1) * 3 + Math.floor(indexInChapter / 2) + 1,
+      sentenceEn: classicSentence.en,
+      sentenceZh: classicSentence.zh,
+      order: index + 1
+    };
+  });
 }
 
 function getClassicBookSentence(title) {

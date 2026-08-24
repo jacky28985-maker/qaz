@@ -21,17 +21,27 @@
       if (actions.querySelector(".legacy-account-menu")) return;
       const state = user.profile?.learningState || {};
       const learned = state.completion?.length || 0;
+      const planned = state.plan?.flatMap((day) => day.tasks || []).length || 0;
+      const hasBook = Boolean(state.selectedBook?.id);
+      const hasPlan = planned > 0;
+      const studyTarget = state.studySession && !state.studySession.completed ? "/legacy/study.html" : "/legacy/plan.html";
+      const chinese = localStorage.getItem("inread-language") === "zh";
+      const copy = chinese
+        ? { label: "学习进度", emptyBook: "还没有选择书籍", emptyPlan: "暂未创建学习计划", mastered: "已掌握", read: "继续阅读", study: "继续背词", plan: "当前训练计划", logout: "退出登录" }
+        : { label: "Learning progress", emptyBook: "Choose a book to begin", emptyPlan: "No study plan yet.", mastered: "words mastered", read: "Continue reading", study: "Continue vocabulary study", plan: "Current study plan", logout: "Log out" };
       const menu = document.createElement("div");
       menu.className = "legacy-account-menu";
       menu.innerHTML = `
         <a class="legacy-account-chip" href="/account"><span class="legacy-avatar">${escapeHtml(user.avatar || "·")}</span><span>${escapeHtml(user.nickname || user.account)}</span></a>
         <div class="legacy-account-popover">
-          <span class="legacy-account-label">Recent learning</span>
-          <strong>${escapeHtml(state.selectedBook?.title || "Choose a book to begin")}</strong>
-          <span>${learned ? `${learned} words mastered` : "Your next reading path will appear here."}</span>
-           <a class="legacy-continue" href="${state.selectedBook?.id ? `/reader?book=${encodeURIComponent(state.selectedBook.id)}` : "/legacy/search.html"}">Continue learning</a>
+          <span class="legacy-account-label">${copy.label}</span>
+          <strong>${escapeHtml(state.selectedBook?.title || copy.emptyBook)}</strong>
+          <span>${hasPlan ? `${learned} / ${planned} ${copy.mastered}` : copy.emptyPlan}</span>
+          <a class="legacy-continue" href="${hasBook ? `/reader?book=${encodeURIComponent(state.selectedBook.id)}` : "/legacy/search.html"}">${copy.read}</a>
+          <a class="legacy-continue" href="${hasPlan ? studyTarget : "/legacy/search.html"}">${copy.study}</a>
+          <a class="legacy-continue" href="${hasPlan ? "/legacy/plan.html" : "/legacy/search.html"}">${copy.plan}</a>
           ${user.role === "admin" ? '<a class="legacy-admin-link" href="/admin">Admin console</a>' : ""}
-          <button type="button" class="legacy-logout">Log out</button>
+          <button type="button" class="legacy-logout">${copy.logout}</button>
         </div>`;
       menu.querySelector(".legacy-logout").addEventListener("click", async () => {
         await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
