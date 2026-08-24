@@ -1256,6 +1256,71 @@ const SEARCH_HERO_TITLE_LINES = {
   ]
 };
 
+const EXTERNAL_SCORE_CONFIG = {
+  "toefl-ibt": {
+    label: "TOEFL iBT",
+    min: 0,
+    max: 120,
+    step: 1,
+    bands: [[0, 34, "A2", 2200], [35, 59, "B1", 3800], [60, 78, "B2", 5600], [79, 100, "C1", 7800], [101, 120, "C2", 9800]]
+  },
+  "toefl-pbt": {
+    label: "TOEFL PBT",
+    min: 310,
+    max: 677,
+    step: 1,
+    bands: [[310, 460, "A2", 2200], [461, 500, "B1", 3800], [501, 560, "B2", 5600], [561, 620, "C1", 7800], [621, 677, "C2", 9800]]
+  },
+  ielts: {
+    label: "IELTS",
+    min: 0,
+    max: 9,
+    step: 0.5,
+    bands: [[0, 3.5, "A2", 2200], [4, 5, "B1", 3800], [5.5, 6.5, "B2", 5600], [7, 8, "C1", 7800], [8.5, 9, "C2", 9800]]
+  },
+  cefr: {
+    label: "CEFR",
+    vocab: { A1: 800, A2: 1800, B1: 3500, B2: 5500, C1: 7800, C2: 10500 }
+  }
+};
+
+const EXTERNAL_ASSESSMENT_COPY = {
+  en: {
+    eyebrow: "Choose your starting point",
+    title: "Use a verified score, or take the quick check.",
+    lead: "A recent TOEFL, IELTS, or CEFR result gives InRead a useful first reading boundary. You can always take the book check later.",
+    scoreOption: "Use an existing score",
+    scoreOptionHint: "TOEFL, IELTS, or CEFR",
+    testOption: "Take the book check",
+    testOptionHint: "Answer a short adaptive word check",
+    typeLabel: "Score type",
+    valueLabel: "Your score",
+    cefrLabel: "Your CEFR level",
+    submit: "Use this score for recommendations",
+    testTitle: "Start the quick book check",
+    hint: ({ label, min, max }) => `${label}: ${min}-${max}. We use it only as a starting estimate for book recommendations.`,
+    invalid: ({ label, min, max }) => `Enter a valid ${label} score from ${min} to ${max}.`,
+    testNotice: "The score form is hidden. Your answers will now shape this book check."
+  },
+  zh: {
+    eyebrow: "选择你的起点",
+    title: "使用已有成绩，或完成快速测词。",
+    lead: "近期的新/老托福、雅思或 CEFR 成绩可以为 InRead 提供初始阅读边界。之后你仍可随时完成图书测词。",
+    scoreOption: "使用已有成绩",
+    scoreOptionHint: "新/老托福、雅思或 CEFR",
+    testOption: "完成图书测词",
+    testOptionHint: "回答一组简短的自适应词汇题",
+    typeLabel: "成绩类型",
+    valueLabel: "你的分数",
+    cefrLabel: "你的 CEFR 等级",
+    submit: "按该成绩获取推荐",
+    testTitle: "开始快速图书测词",
+    hint: ({ label, min, max }) => `${label}：${min}-${max}。系统仅将其作为图书推荐的初始估算。`,
+    invalid: ({ label, min, max }) => `请输入 ${min}-${max} 之间的有效 ${label} 分数。`,
+    testNotice: "成绩输入已收起，现在将由你的答题情况决定这本书的测词结果。"
+  }
+};
+
 document.addEventListener("DOMContentLoaded", async () => {
   await window.InReadAccount?.ready;
   const page = document.body.dataset.page;
@@ -1737,7 +1802,120 @@ function initTestPage() {
   document.getElementById("backToSearch").addEventListener("click", () => go("search"));
   document.getElementById("knowButton").addEventListener("click", () => answerWord(true));
   document.getElementById("dontKnowButton").addEventListener("click", () => answerWord(false));
-  renderTest();
+  bindExternalAssessment();
+}
+
+function bindExternalAssessment() {
+  const entry = document.getElementById("assessmentEntry");
+  const testContent = document.getElementById("adaptiveTestContent");
+  const form = document.getElementById("externalScoreForm");
+  const typeInput = document.getElementById("scoreType");
+  const scoreInput = document.getElementById("scoreValue");
+  const cefrField = document.getElementById("cefrField");
+  const numberField = document.getElementById("scoreNumberField");
+  const message = document.getElementById("scoreFormMessage");
+  const copy = EXTERNAL_ASSESSMENT_COPY[currentLanguage] || EXTERNAL_ASSESSMENT_COPY.en;
+
+  const setText = (id, value) => { document.getElementById(id).textContent = value; };
+  setText("assessmentEyebrow", copy.eyebrow);
+  setText("assessmentTitle", copy.title);
+  setText("assessmentLead", copy.lead);
+  setText("assessmentScoreOption", copy.scoreOption);
+  setText("assessmentScoreOptionHint", copy.scoreOptionHint);
+  setText("assessmentTestOption", copy.testOption);
+  setText("assessmentTestOptionHint", copy.testOptionHint);
+  setText("scoreTypeLabel", copy.typeLabel);
+  setText("scoreValueLabel", copy.valueLabel);
+  setText("cefrValueLabel", copy.cefrLabel);
+  setText("applyExternalScore", copy.submit);
+
+  const syncScoreFields = () => {
+    const config = EXTERNAL_SCORE_CONFIG[typeInput.value];
+    const usesCefr = typeInput.value === "cefr";
+    cefrField.hidden = !usesCefr;
+    numberField.hidden = usesCefr;
+    scoreInput.required = !usesCefr;
+    if (!usesCefr) {
+      scoreInput.min = String(config.min);
+      scoreInput.max = String(config.max);
+      scoreInput.step = String(config.step);
+      scoreInput.placeholder = `${config.min}-${config.max}`;
+      document.getElementById("scoreRangeHint").textContent = copy.hint(config);
+    } else {
+      document.getElementById("scoreRangeHint").textContent = currentLanguage === "zh"
+        ? "CEFR 是欧洲语言共同参考框架。选择最接近你近期正式评估的等级。"
+        : "CEFR is the Common European Framework. Choose the level closest to your recent formal assessment.";
+    }
+    message.textContent = "";
+  };
+
+  document.querySelectorAll("[data-assessment-route]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const useTest = button.dataset.assessmentRoute === "test";
+      document.querySelectorAll("[data-assessment-route]").forEach((item) => item.classList.toggle("is-selected", item === button));
+      if (useTest) {
+        entry.hidden = true;
+        testContent.hidden = false;
+        document.getElementById("testIntro").textContent = copy.testNotice;
+        renderTest();
+      } else {
+        entry.hidden = false;
+        testContent.hidden = true;
+      }
+    });
+  });
+
+  typeInput.addEventListener("change", syncScoreFields);
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const type = typeInput.value;
+    const config = EXTERNAL_SCORE_CONFIG[type];
+    const rawScore = type === "cefr" ? document.getElementById("cefrValue").value : Number(scoreInput.value);
+    const profile = buildExternalReaderProfile(type, rawScore);
+    if (!profile) {
+      message.textContent = copy.invalid(config);
+      return;
+    }
+    const state = getState();
+    state.readerProfile = profile;
+    state.result = null;
+    state.plan = [];
+    state.studySession = null;
+    setState(state);
+    go("library", { assessment: "external" });
+  });
+
+  syncScoreFields();
+}
+
+function buildExternalReaderProfile(type, rawScore) {
+  const config = EXTERNAL_SCORE_CONFIG[type];
+  if (!config) return null;
+  let level;
+  let estimatedVocab;
+  let displayScore;
+  if (type === "cefr") {
+    level = String(rawScore || "").toUpperCase();
+    estimatedVocab = config.vocab[level];
+    displayScore = level;
+  } else {
+    const score = Number(rawScore);
+    if (!Number.isFinite(score) || score < config.min || score > config.max || (config.step === 0.5 && Math.round(score * 2) !== score * 2)) return null;
+    const band = config.bands.find(([min, max]) => score >= min && score <= max);
+    if (!band) return null;
+    [, , level, estimatedVocab] = band;
+    displayScore = String(score);
+  }
+  if (!estimatedVocab) return null;
+  const source = `${config.label} ${displayScore}`;
+  return {
+    estimatedVocab,
+    level,
+    sourceBook: source,
+    sourceLevel: level,
+    unknownCount: null,
+    assessment: { type, score: displayScore, source: "external" }
+  };
 }
 
 function initResultPage() {
