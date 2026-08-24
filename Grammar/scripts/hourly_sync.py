@@ -73,12 +73,20 @@ def copy_project_tree(source_root: Path, target_root: Path):
         shutil.copy2(source_path, destination)
 
 
-def ensure_repo(repo_dir: Path, repo_url: str):
+def ensure_repo(repo_dir: Path, repo_url: str, proxy: str):
     repo_dir.parent.mkdir(parents=True, exist_ok=True)
     if not (repo_dir / ".git").exists():
-        run(["git", "clone", repo_url, str(repo_dir)])
+        clone_cmd = ["git"]
+        if proxy:
+            clone_cmd.extend(["-c", f"http.proxy={proxy}", "-c", f"https.proxy={proxy}"])
+        clone_cmd.extend(["clone", repo_url, str(repo_dir)])
+        run(clone_cmd)
     else:
         run(["git", "remote", "set-url", "origin", repo_url], cwd=repo_dir)
+
+    if proxy:
+        run(["git", "config", "http.proxy", proxy], cwd=repo_dir)
+        run(["git", "config", "https.proxy", proxy], cwd=repo_dir)
 
     run(["git", "fetch", "origin", "--prune"], cwd=repo_dir)
 
@@ -156,7 +164,7 @@ def main():
         return
 
     try:
-        ensure_repo(repo_dir, repo_url)
+        ensure_repo(repo_dir, repo_url, config.get("git_proxy", "").strip())
         ensure_commit_identity(
             repo_dir,
             config.get("git_user_name", "").strip(),
