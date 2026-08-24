@@ -16,3 +16,5 @@
 - Latest `InRead` branch commit: `5073dff`
 - Latest `InRead` sync time: `2026-08-24T13:00:10+08:00`
 - Latest `InRead` branch commit: `f45f9c2`
+- Latest `InRead` sync time: `2026-08-24T13:00:36+08:00`
+- Latest `InRead` branch commit: `617e208`
