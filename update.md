@@ -8,3 +8,5 @@
 - Latest `InRead` branch commit: `f1b5dd3`
 - Latest `InRead` sync time: `2026-08-24T14:03:41+08:00`
 - Latest `InRead` branch commit: `eb5780b`
+- Latest `InRead` sync time: `2026-08-24T14:15:01+08:00`
+- Latest `InRead` branch commit: `5d45c0e`
