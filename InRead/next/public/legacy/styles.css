@@ -358,7 +358,7 @@ html[data-theme="dark"] .rotate-notice { background: rgba(15, 18, 16, 0.94); }
 html[data-theme="dark"] .legacy-avatar { background: #294435; }
 html[data-theme="dark"] .legacy-logout { background: #422727; }
 html[data-theme="dark"] .card, html[data-theme="dark"] .library-card, html[data-theme="dark"] .day-card, html[data-theme="dark"] .plan-day-details[open] summary { background: var(--surface); }
-html:is([data-theme="dark"], [data-theme="aurora"]) :is(.card, .card.soft, .mini-card, .journey-step, .library-card, .empty-state, .plan-builder-card, .plan-map-wrap, .study-status-wrap, .study-checklist-wrap, .day-card, .task, .study-question-surface, .study-word-card, .study-complete-card, .study-visual-card, .guide-card-active, .plan-day-details[open] summary) { background: var(--surface) !important; background-image: none; }
+html:is([data-theme="dark"], [data-theme="aurora"]) :is(.card, .card.soft, .mini-card, .journey-flow, .journey-step, .library-card, .empty-state, .plan-builder-card, .plan-map-wrap, .study-status-wrap, .study-checklist-wrap, .day-card, .task, .study-question-surface, .study-word-card, .study-complete-card, .study-visual-card, .guide-card-active, .plan-day-details[open] summary) { background: var(--surface) !important; background-image: none; }
 html:is([data-theme="dark"], [data-theme="aurora"]) .page { background: var(--bg) !important; background-image: none; }
 html:is([data-theme="dark"], [data-theme="aurora"]) :is(.search-suggestion, .filter-chip, .pill-btn, .secondary-btn, .plan-slider-value-input, .task-status-chip, .plan-day-actions button, .study-spell-row input, .input-row input) { background: var(--surface-soft) !important; color: var(--ink); }
 html:is([data-theme="dark"], [data-theme="aurora"]) :is(.hero-card, .library-hero, .plan-shell, .study-shell) { background: var(--surface) !important; }
@@ -887,7 +887,7 @@ button:disabled {
   padding: 18px;
   border-radius: 24px;
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--surface-soft);
 }
 
 .journey-step {
