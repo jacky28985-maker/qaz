@@ -6,3 +6,5 @@
 - InRead 提交：`585f038`
 - Latest `InRead` sync time: `2026-08-24T13:50:17+08:00`
 - Latest `InRead` branch commit: `f1b5dd3`
+- Latest `InRead` sync time: `2026-08-24T14:03:41+08:00`
+- Latest `InRead` branch commit: `eb5780b`
