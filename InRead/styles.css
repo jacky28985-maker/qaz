@@ -1210,6 +1210,8 @@ button:disabled {
   gap: 16px;
   min-height: 0;
   align-content: start;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .plan-map-wrap,
@@ -1217,6 +1219,22 @@ button:disabled {
   min-height: 0;
   overflow: auto;
   padding-right: 2px;
+}
+
+body[data-page="plan"] .page,
+body[data-page="study"] .page {
+  overflow: hidden;
+}
+
+body[data-page="plan"] .lead.compact,
+body[data-page="study"] .lead.compact {
+  margin-top: 12px;
+  line-height: 1.65;
+}
+
+body[data-page="plan"] .small-actions,
+body[data-page="study"] .small-actions {
+  margin-top: 0;
 }
 
 .plan-grid-compact {
