@@ -2852,6 +2852,7 @@ function renderStudy() {
   document.getElementById("studyRuleTitle").textContent = studyCopy.masteryRuleTitle;
   document.getElementById("studyRuleCopy").textContent = studyCopy.masteryRuleCopy;
   document.getElementById("studyHint").textContent = studyCopy.questionHint;
+  document.getElementById("studyChecklistTitle").textContent = studyCopy.checklistTitle;
   document.getElementById("studyBackToPlan").textContent = studyCopy.backToPlan;
   document.getElementById("studyGotoGate").textContent = studyCopy.gotoGate;
 
@@ -2869,8 +2870,25 @@ function renderStudy() {
 
   const surface = document.getElementById("studyQuestionSurface");
   const answerArea = document.getElementById("studyAnswerArea");
+  const checklist = document.getElementById("studyChecklist");
   const badge = document.getElementById("studyTypeBadge");
   const prompt = document.getElementById("studyPrompt");
+  const bucket = state.plan.find((item) => item.day === session.day);
+  checklist.innerHTML = (bucket?.tasks || []).map((task) => `
+    <div class="task ${state.completion.includes(task.word) ? "task-complete" : ""}">
+      <div class="task-top">
+        <strong>${escapeHtml(task.word)}</strong>
+        <span class="task-status-chip ${state.completion.includes(task.word) ? "task-status-chip-done" : ""}">
+          ${escapeHtml(state.completion.includes(task.word) ? getCopy().plan.done : getWordGloss(task.word))}
+        </span>
+      </div>
+      <p class="task-meta">${escapeHtml(translate(getCopy().plan.taskMeta, {
+        chapter: task.chapter,
+        frequency: task.frequency,
+        difficulty: task.difficulty
+      }))}</p>
+    </div>
+  `).join("");
 
   if (session.completed || !session.currentQuestion) {
     badge.textContent = studyCopy.typeLabels.scene_to_en_choice;

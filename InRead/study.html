@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InRead | Trainer</title>
-  <link rel="stylesheet" href="styles.css?v=17">
+  <link rel="stylesheet" href="styles.css?v=18">
 </head>
 <body data-page="study">
   <div class="rotate-notice">
@@ -28,8 +28,8 @@
         </div>
       </header>
 
-      <main class="page">
-        <section class="card word-panel">
+      <main class="page single study-page">
+        <section class="card study-shell">
           <div>
             <span class="eyebrow" id="studyPageEyebrow">Vocabulary trainer</span>
             <h2 id="studyTitle">Day 1 training</h2>
@@ -48,46 +48,48 @@
 
           <div id="studyAnswerArea" class="stack"></div>
           <div id="studyFeedback" class="status-note hidden"></div>
+
+          <div class="study-status-wrap">
+            <span class="eyebrow" id="studyStatusEyebrow">Training status</span>
+            <div class="stats-grid study-stats-grid">
+              <div class="stat-box">
+                <strong id="studyRoundCount">0</strong>
+                <span id="studyRoundLabel">Rounds completed</span>
+              </div>
+              <div class="stat-box">
+                <strong id="studyMasteredCount">0</strong>
+                <span id="studyMasteredLabel">Mastered today</span>
+              </div>
+              <div class="stat-box">
+                <strong id="studyLeftCount">0</strong>
+                <span id="studyLeftLabel">Still in rotation</span>
+              </div>
+              <div class="stat-box">
+                <strong id="studyBookLabel">No book selected</strong>
+                <span id="studyBookStatLabel">Target book</span>
+              </div>
+            </div>
+
+            <div class="quote-box">
+              <strong id="studyRuleTitle">Why this trainer repeats words</strong>
+              <p id="studyRuleCopy" class="word-meta">Every word must survive at least three correct passes. Wrong answers re-enter sooner, so weak words stay visible without turning the whole plan into mass memorization.</p>
+            </div>
+
+            <div class="study-checklist-wrap">
+              <span class="eyebrow" id="studyChecklistTitle">Today's checklist</span>
+              <div id="studyChecklist" class="task-list"></div>
+            </div>
+
+            <div class="small-actions button-row">
+              <button id="studyBackToPlan" class="ghost-btn" type="button">Back to plan</button>
+              <button id="studyGotoGate" class="secondary-btn" type="button">View reading access</button>
+            </div>
+          </div>
         </section>
-
-        <aside class="card soft">
-          <span class="eyebrow" id="studyStatusEyebrow">Training status</span>
-          <div class="stats-grid">
-            <div class="stat-box">
-              <strong id="studyRoundCount">0</strong>
-              <span id="studyRoundLabel">Rounds completed</span>
-            </div>
-            <div class="stat-box">
-              <strong id="studyMasteredCount">0</strong>
-              <span id="studyMasteredLabel">Mastered today</span>
-            </div>
-            <div class="stat-box">
-              <strong id="studyLeftCount">0</strong>
-              <span id="studyLeftLabel">Still in rotation</span>
-            </div>
-          </div>
-
-          <div class="quote-box" style="margin-top: 18px;">
-            <strong id="studyRuleTitle">Why this trainer repeats words</strong>
-            <p id="studyRuleCopy" class="word-meta">Every word must survive at least three correct passes. Wrong answers re-enter sooner, so weak words stay visible without turning the whole plan into mass memorization.</p>
-          </div>
-
-          <div class="stats-grid study-meta-grid">
-            <div class="stat-box">
-              <strong id="studyBookLabel">No book selected</strong>
-              <span id="studyBookStatLabel">Target book</span>
-            </div>
-          </div>
-
-          <div class="small-actions button-row">
-            <button id="studyBackToPlan" class="ghost-btn" type="button">Back to plan</button>
-            <button id="studyGotoGate" class="secondary-btn" type="button">View reading access</button>
-          </div>
-        </aside>
       </main>
     </div>
   </div>
 
-  <script src="app.js?v=17"></script>
+  <script src="app.js?v=18"></script>
 </body>
 </html>
