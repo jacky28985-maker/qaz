@@ -1,8 +1,6 @@
 # update
 
-- 最近一次 AI 记录同步：`2026-08-24T14:42:53+08:00`
-- AI 记录文件：`The using of AI/2026-08-24-14.md`
-- 最近一次 InRead 分支同步：`2026-08-24T14:37:12+08:00`
-- InRead 提交：`ae75cb5`
-- Latest `InRead` sync time: `2026-08-24T14:51:33+08:00`
-- Latest `InRead` branch commit: `002212a`
+- 最近一次 AI 记录同步：`2026-08-24T15:43:24+08:00`
+- AI 记录文件：`The using of AI/2026-08-24-15.md`
+- 最近一次 InRead 分支同步：`2026-08-24T14:51:33+08:00`
+- InRead 提交：`002212a`
