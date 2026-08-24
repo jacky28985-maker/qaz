@@ -12,3 +12,5 @@
 - AI usage log folder initialized on 2026-08-24.
 - Hourly automation will append incremental records only.
 - `InRead` branch will be updated whenever the hourly task detects local changes.
+- Latest `InRead` sync time: `2026-08-24T12:52:41+08:00`
+- Latest `InRead` branch commit: `5073dff`
