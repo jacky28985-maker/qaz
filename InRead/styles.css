@@ -1184,6 +1184,7 @@ button:disabled {
   display: grid;
   gap: 20px;
   align-content: start;
+  min-height: 100%;
 }
 
 .plan-map-wrap,
@@ -1191,6 +1192,31 @@ button:disabled {
 .study-checklist-wrap {
   display: grid;
   gap: 14px;
+}
+
+.plan-main-grid,
+.study-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  gap: 20px;
+  min-height: 0;
+}
+
+.plan-overview-column,
+.plan-map-column,
+.study-main-column,
+.study-side-column {
+  display: grid;
+  gap: 16px;
+  min-height: 0;
+  align-content: start;
+}
+
+.plan-map-wrap,
+.study-status-wrap {
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
 }
 
 .plan-grid-compact {
@@ -1636,6 +1662,11 @@ body[data-viewport-profile="desktop-compact"] .step:hover {
     width: 1px;
     height: 26px;
     justify-self: center;
+  }
+
+  .plan-main-grid,
+  .study-main-grid {
+    grid-template-columns: 1fr;
   }
 
   .study-choice-grid {
