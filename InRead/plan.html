@@ -36,56 +36,63 @@
             This plan is not here to drag you back into mass memorization. It only targets the words that most interfere with this book, then pushes you back into the text.
           </p>
 
-          <div class="plan-builder-card">
-            <div class="plan-builder-head">
-              <strong id="planSliderTitle">Choose how many days you want to train</strong>
-              <input id="planSliderValue" class="day-badge plan-slider-value-input" type="number" min="1" max="30" step="1" value="7" inputmode="numeric" aria-label="Plan days">
-            </div>
-            <input id="daysSlider" class="days-slider" type="range" min="1" max="30" step="0.01" value="7">
-            <div id="planSliderScale" class="plan-slider-scale">
-              <span>1</span>
-              <span>7</span>
-              <span>14</span>
-              <span>21</span>
-              <span>30</span>
-            </div>
-            <p id="planSliderHint" class="foot-note">When you stop sliding, InRead recalculates the pacing, daily word count, and estimated study time.</p>
-          </div>
+          <div class="plan-main-grid">
+            <div class="plan-overview-column">
+              <div class="plan-builder-card">
+                <div class="plan-builder-head">
+                  <strong id="planSliderTitle">Choose how many days you want to train</strong>
+                  <input id="planSliderValue" class="day-badge plan-slider-value-input" type="number" min="1" max="30" step="1" value="7" inputmode="numeric" aria-label="Plan days">
+                </div>
+                <input id="daysSlider" class="days-slider" type="range" min="1" max="30" step="0.01" value="7">
+                <div id="planSliderScale" class="plan-slider-scale">
+                  <span>1</span>
+                  <span>7</span>
+                  <span>14</span>
+                  <span>21</span>
+                  <span>30</span>
+                </div>
+                <p id="planSliderHint" class="foot-note">When you stop sliding, InRead recalculates the pacing, daily word count, and estimated study time.</p>
+              </div>
 
-          <div class="stats-grid plan-stats-grid">
-            <div class="stat-box">
-              <strong id="planWordCount">0</strong>
-              <span id="planWordLabel">Words to review</span>
-            </div>
-            <div class="stat-box">
-              <strong id="planDayCount">0</strong>
-              <span id="planDayLabel">Training days</span>
-            </div>
-            <div class="stat-box">
-              <strong id="planDailyWordCount">0</strong>
-              <span id="planDailyWordLabel">Words per day</span>
-            </div>
-            <div class="stat-box">
-              <strong id="planDailyTime">0 min</strong>
-              <span id="planTimeLabel">Study time per day</span>
-            </div>
-          </div>
+              <div class="stats-grid plan-stats-grid">
+                <div class="stat-box">
+                  <strong id="planWordCount">0</strong>
+                  <span id="planWordLabel">Words to review</span>
+                </div>
+                <div class="stat-box">
+                  <strong id="planDayCount">0</strong>
+                  <span id="planDayLabel">Training days</span>
+                </div>
+                <div class="stat-box">
+                  <strong id="planDailyWordCount">0</strong>
+                  <span id="planDailyWordLabel">Words per day</span>
+                </div>
+                <div class="stat-box">
+                  <strong id="planDailyTime">0 min</strong>
+                  <span id="planTimeLabel">Study time per day</span>
+                </div>
+              </div>
 
-          <div class="quote-box" style="margin-top: 18px;">
-            <strong id="planRoleTitle">What this page is for</strong>
-            <p id="planRoleCopy" class="word-meta">It is only a bridge. Its job is to remove the most important reading barriers, not to replace reading itself.</p>
-            <p id="planSummary" class="word-meta" style="margin-top: 12px;">At this pace, the plan summary will appear here.</p>
-            <p id="planRuleCopy" class="word-meta" style="margin-top: 12px;">Each word must pass at least 3 rounds. Missed words return sooner.</p>
-          </div>
+              <div class="small-actions button-row">
+                <button id="startTodayStudy" class="primary-btn" type="button">Start today's training</button>
+                <button id="backToResult" class="ghost-btn" type="button">Back to result</button>
+                <button id="gotoGate" class="secondary-btn" type="button">View reading access</button>
+              </div>
+            </div>
 
-          <div class="small-actions button-row">
-            <button id="startTodayStudy" class="primary-btn" type="button">Start today's training</button>
-            <button id="backToResult" class="ghost-btn" type="button">Back to result</button>
-            <button id="gotoGate" class="secondary-btn" type="button">View reading access</button>
-          </div>
-          <div class="plan-map-wrap">
-            <span class="eyebrow" id="planListEyebrow">Daily checklist</span>
-            <div id="planGrid" class="plan-grid plan-grid-compact"></div>
+            <div class="plan-map-column">
+              <div class="quote-box">
+                <strong id="planRoleTitle">What this page is for</strong>
+                <p id="planRoleCopy" class="word-meta">It is only a bridge. Its job is to remove the most important reading barriers, not to replace reading itself.</p>
+                <p id="planSummary" class="word-meta" style="margin-top: 12px;">At this pace, the plan summary will appear here.</p>
+                <p id="planRuleCopy" class="word-meta" style="margin-top: 12px;">Each word must pass at least 3 rounds. Missed words return sooner.</p>
+              </div>
+
+              <div class="plan-map-wrap">
+                <span class="eyebrow" id="planListEyebrow">Daily checklist</span>
+                <div id="planGrid" class="plan-grid plan-grid-compact"></div>
+              </div>
+            </div>
           </div>
         </section>
       </main>

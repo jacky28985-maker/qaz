@@ -39,50 +39,56 @@
             </div>
           </div>
 
-          <div class="study-stage">
-            <span id="studyTypeBadge" class="eyebrow">Chinese -> English</span>
-            <p id="studyPrompt" class="study-prompt">Choose the English word that matches this Chinese hint.</p>
-            <div id="studyQuestionSurface" class="study-question-surface"></div>
-            <p id="studyHint" class="foot-note">Stay with the book-specific clue. This trainer only exists to clear the words that block the current text.</p>
-          </div>
+          <div class="study-main-grid">
+            <div class="study-main-column">
+              <div class="study-stage">
+                <span id="studyTypeBadge" class="eyebrow">Chinese -> English</span>
+                <p id="studyPrompt" class="study-prompt">Choose the English word that matches this Chinese hint.</p>
+                <div id="studyQuestionSurface" class="study-question-surface"></div>
+                <p id="studyHint" class="foot-note">Stay with the book-specific clue. This trainer only exists to clear the words that block the current text.</p>
+              </div>
 
-          <div id="studyAnswerArea" class="stack"></div>
-          <div id="studyFeedback" class="status-note hidden"></div>
-
-          <div class="study-status-wrap">
-            <span class="eyebrow" id="studyStatusEyebrow">Training status</span>
-            <div class="stats-grid study-stats-grid">
-              <div class="stat-box">
-                <strong id="studyRoundCount">0</strong>
-                <span id="studyRoundLabel">Rounds completed</span>
-              </div>
-              <div class="stat-box">
-                <strong id="studyMasteredCount">0</strong>
-                <span id="studyMasteredLabel">Mastered today</span>
-              </div>
-              <div class="stat-box">
-                <strong id="studyLeftCount">0</strong>
-                <span id="studyLeftLabel">Still in rotation</span>
-              </div>
-              <div class="stat-box">
-                <strong id="studyBookLabel">No book selected</strong>
-                <span id="studyBookStatLabel">Target book</span>
-              </div>
+              <div id="studyAnswerArea" class="stack"></div>
+              <div id="studyFeedback" class="status-note hidden"></div>
             </div>
 
-            <div class="quote-box">
-              <strong id="studyRuleTitle">Why this trainer repeats words</strong>
-              <p id="studyRuleCopy" class="word-meta">Every word must survive at least three correct passes. Wrong answers re-enter sooner, so weak words stay visible without turning the whole plan into mass memorization.</p>
-            </div>
+            <div class="study-side-column">
+              <div class="study-status-wrap">
+                <span class="eyebrow" id="studyStatusEyebrow">Training status</span>
+                <div class="stats-grid study-stats-grid">
+                  <div class="stat-box">
+                    <strong id="studyRoundCount">0</strong>
+                    <span id="studyRoundLabel">Rounds completed</span>
+                  </div>
+                  <div class="stat-box">
+                    <strong id="studyMasteredCount">0</strong>
+                    <span id="studyMasteredLabel">Mastered today</span>
+                  </div>
+                  <div class="stat-box">
+                    <strong id="studyLeftCount">0</strong>
+                    <span id="studyLeftLabel">Still in rotation</span>
+                  </div>
+                  <div class="stat-box">
+                    <strong id="studyBookLabel">No book selected</strong>
+                    <span id="studyBookStatLabel">Target book</span>
+                  </div>
+                </div>
 
-            <div class="study-checklist-wrap">
-              <span class="eyebrow" id="studyChecklistTitle">Today's checklist</span>
-              <div id="studyChecklist" class="task-list"></div>
-            </div>
+                <div class="quote-box">
+                  <strong id="studyRuleTitle">Why this trainer repeats words</strong>
+                  <p id="studyRuleCopy" class="word-meta">Every word must survive at least three correct passes. Wrong answers re-enter sooner, so weak words stay visible without turning the whole plan into mass memorization.</p>
+                </div>
 
-            <div class="small-actions button-row">
-              <button id="studyBackToPlan" class="ghost-btn" type="button">Back to plan</button>
-              <button id="studyGotoGate" class="secondary-btn" type="button">View reading access</button>
+                <div class="study-checklist-wrap">
+                  <span class="eyebrow" id="studyChecklistTitle">Today's checklist</span>
+                  <div id="studyChecklist" class="task-list"></div>
+                </div>
+
+                <div class="small-actions button-row">
+                  <button id="studyBackToPlan" class="ghost-btn" type="button">Back to plan</button>
+                  <button id="studyGotoGate" class="secondary-btn" type="button">View reading access</button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
