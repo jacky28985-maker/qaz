@@ -1175,9 +1175,67 @@ button:disabled {
   justify-content: center;
 }
 
+.plan-page {
+  align-content: start;
+}
+
+.plan-shell,
+.study-shell {
+  display: grid;
+  gap: 20px;
+  align-content: start;
+}
+
+.plan-map-wrap,
+.study-status-wrap,
+.study-checklist-wrap {
+  display: grid;
+  gap: 14px;
+}
+
+.plan-grid-compact {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 0;
+}
+
+.day-card-compact {
+  display: grid;
+  gap: 14px;
+}
+
+.plan-day-details {
+  display: grid;
+  gap: 10px;
+}
+
+.plan-day-details summary {
+  cursor: pointer;
+  list-style: none;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.plan-day-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.plan-day-details[open] summary {
+  color: var(--ink);
+  background: #ffffff;
+}
+
 .study-stage {
   display: grid;
   gap: 14px;
+}
+
+.study-page {
+  align-content: start;
 }
 
 .study-prompt {
@@ -1189,7 +1247,7 @@ button:disabled {
 .study-question-surface {
   display: grid;
   gap: 14px;
-  min-height: 220px;
+  min-height: 180px;
 }
 
 .study-word-card,
@@ -1218,11 +1276,18 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  width: 100%;
 }
 
 .study-choice-btn {
+  width: 100%;
+  min-width: 0;
   min-height: 64px;
   text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  align-items: center;
+  display: flex;
 }
 
 .study-spell-row {
@@ -1289,6 +1354,11 @@ button:disabled {
 
 .study-meta-grid {
   grid-template-columns: 1fr;
+}
+
+.study-stats-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 0;
 }
 
 .state-text {
@@ -1553,7 +1623,8 @@ body[data-viewport-profile="desktop-compact"] .step:hover {
 
   .grid-3,
   .stats-grid,
-  .plan-stats-grid {
+  .plan-stats-grid,
+  .study-stats-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1645,6 +1716,10 @@ body[data-viewport-profile="desktop-compact"] .step:hover {
 
   .study-spell-row {
     flex-direction: column;
+  }
+
+  .plan-grid-compact {
+    grid-template-columns: 1fr;
   }
 
   .plan-builder-head {
