@@ -673,7 +673,10 @@ const COPY = {
       activeDay: "Today",
       lockedDay: "Locked for now",
       progress: ({ done, total }) => `${done}/${total} mastered`,
-      rule: "Each word must pass at least 3 rounds. Missed words return sooner."
+      rule: "Each word must pass at least 3 rounds. Missed words return sooner.",
+      mapTitle: "Training map",
+      viewWords: "View word list",
+      hideWords: "Hide word list"
     },
     study: {
       progress: ({ mastered, total }) => `${mastered}/${total} words ready today`,
@@ -701,6 +704,7 @@ const COPY = {
       submit: "Submit",
       backToPlan: "Back to plan",
       gotoGate: "View reading access",
+      checklistTitle: "Today's checklist",
       completeTitle: "Today's words are ready",
       completeCopy: "Each word in this set has survived the minimum number of review rounds. You can return to the plan, unlock the next day, or move toward reading access if the full plan is complete.",
       currentDay: ({ day }) => `Day ${day} training`,
@@ -864,7 +868,10 @@ const COPY = {
       activeDay: "今日任务",
       lockedDay: "暂未解锁",
       progress: ({ done, total }) => `已掌握 ${done}/${total}`,
-      rule: "每个词至少要答对 3 轮；答错的词会更快回流。"
+      rule: "每个词至少要答对 3 轮；答错的词会更快回流。",
+      mapTitle: "训练日程",
+      viewWords: "查看词单",
+      hideWords: "收起词单"
     },
     study: {
       progress: ({ mastered, total }) => `今日已掌握 ${mastered}/${total} 个词`,
@@ -892,6 +899,7 @@ const COPY = {
       submit: "提交",
       backToPlan: "返回计划页",
       gotoGate: "查看阅读资格",
+      checklistTitle: "今日清单",
       completeTitle: "今天这组词已经过关",
       completeCopy: "这一组词都已经达到最小复现次数。你可以返回计划页继续解锁后续天数，或者在整份计划结束后进入阅读资格页。",
       currentDay: ({ day }) => `第 ${day} 天训练`,
@@ -2266,8 +2274,7 @@ function getPlanWords(state) {
   }
 
   return [...state.unknownWords]
-    .sort((a, b) => b.frequency - a.frequency || a.chapter - b.chapter)
-    .slice(0, HIGH_FREQUENCY_LIMIT);
+    .sort((a, b) => b.frequency - a.frequency || a.chapter - b.chapter);
 }
 
 function getPlanDayLimit(state) {
@@ -2770,7 +2777,6 @@ function renderPlan() {
     const bucketStatus = getBucketCompletion(bucket, state);
     const isActive = activeDay === bucket.day;
     const isLocked = activeDay !== null && bucket.day > activeDay && !bucketStatus.done;
-    const isContinuing = !!state.studySession && !state.studySession.completed && state.studySession.day === bucket.day;
     const badgeCopy = bucketStatus.done
       ? planCopy.completedDay
       : isActive
@@ -2778,7 +2784,7 @@ function renderPlan() {
         : planCopy.lockedDay;
 
     return `
-      <div class="day-card ${isActive ? "day-card-active" : ""} ${bucketStatus.done ? "day-card-complete" : ""}">
+      <div class="day-card day-card-compact ${isActive ? "day-card-active" : ""} ${bucketStatus.done ? "day-card-complete" : ""}">
         <div class="day-head">
           <div class="stack" style="gap: 6px;">
             <strong>${escapeHtml(translate(planCopy.day, { day: bucket.day }))}</strong>
@@ -2789,35 +2795,28 @@ function renderPlan() {
             <span class="day-badge ${bucketStatus.done ? "day-badge-strong" : ""}">${escapeHtml(badgeCopy)}</span>
           </div>
         </div>
-        <div class="task-list">
-          ${bucket.tasks.map((task) => `
-            <div class="task ${state.completion.includes(task.word) ? "task-complete" : ""}">
-              <div class="task-top">
-                <strong>${task.word}</strong>
-                <span class="task-status-chip ${state.completion.includes(task.word) ? "task-status-chip-done" : ""}">
-                  ${escapeHtml(state.completion.includes(task.word) ? planCopy.done : getWordGloss(task.word))}
-                </span>
-              </div>
-              <p class="task-meta">${escapeHtml(translate(planCopy.taskMeta, {
-                chapter: task.chapter,
-                frequency: task.frequency,
-                difficulty: task.difficulty
-              }))}</p>
+        ${!isLocked ? `
+          <details class="plan-day-details">
+            <summary>${escapeHtml(planCopy.viewWords)}</summary>
+            <div class="task-list">
+              ${bucket.tasks.map((task) => `
+                <div class="task ${state.completion.includes(task.word) ? "task-complete" : ""}">
+                  <div class="task-top">
+                    <strong>${task.word}</strong>
+                    <span class="task-status-chip ${state.completion.includes(task.word) ? "task-status-chip-done" : ""}">
+                      ${escapeHtml(state.completion.includes(task.word) ? planCopy.done : getWordGloss(task.word))}
+                    </span>
+                  </div>
+                  <p class="task-meta">${escapeHtml(translate(planCopy.taskMeta, {
+                    chapter: task.chapter,
+                    frequency: task.frequency,
+                    difficulty: task.difficulty
+                  }))}</p>
+                </div>
+              `).join("")}
             </div>
-          `).join("")}
-        </div>
-        <div class="button-row plan-day-actions">
-          ${isActive ? `
-            <button class="primary-btn" type="button" data-start-day="${bucket.day}">
-              ${escapeHtml(isContinuing ? planCopy.continueToday : planCopy.startToday)}
-            </button>
-          ` : ""}
-          ${isLocked ? `
-            <button class="ghost-btn" type="button" disabled>
-              ${escapeHtml(planCopy.lockedDay)}
-            </button>
-          ` : ""}
-        </div>
+          </details>
+        ` : ""}
       </div>
     `;
   }).join("");
@@ -3084,6 +3083,19 @@ function formatVocabRange([min, max]) {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function shuffleArray(items) {
+  const next = [...items];
+  for (let index = next.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [next[index], next[swapIndex]] = [next[swapIndex], next[index]];
+  }
+  return next;
+}
+
+function hashWord(word) {
+  return [...String(word)].reduce((seed, char) => seed + char.charCodeAt(0), 0) % 360;
 }
 
 function escapeHtml(text) {
