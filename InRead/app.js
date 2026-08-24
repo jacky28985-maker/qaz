@@ -1248,7 +1248,8 @@ const SEARCH_HERO_TITLE_LINES = {
   ]
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await window.InReadAccount?.ready;
   const page = document.body.dataset.page;
   currentLanguage = getStoredLanguage() || DEFAULT_LANGUAGE;
   syncViewportProfile();
@@ -1470,6 +1471,7 @@ function setState(state) {
     nextState.result = normalizeResult(nextState.result);
   }
   sessionStorage.setItem("inread-state", JSON.stringify(nextState));
+  window.InReadAccount?.saveState(nextState);
 }
 
 function normalizeResult(result) {

@@ -21,6 +21,7 @@ export function verifyPassword(password, stored) {
   const [salt, digest] = String(stored || "").split(":");
   if (!salt || !digest) return false;
   const candidate = crypto.scryptSync(password, salt, 64).toString("hex");
+  if (digest.length !== candidate.length) return false;
   return crypto.timingSafeEqual(Buffer.from(digest, "hex"), Buffer.from(candidate, "hex"));
 }
 
@@ -92,6 +93,7 @@ export function getSessionUser(token) {
   if (!token || !token.includes(".")) return null;
   const [payload, signature] = token.split(".");
   const expected = crypto.createHmac("sha256", sessionSecret).update(payload).digest("base64url");
+  if (signature.length !== expected.length) return null;
   if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
   try {
     const decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));

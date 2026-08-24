@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
+import { Landing } from "./auth-ui";
 
-export default function HomePage() {
-  redirect("/legacy/search.html");
-}
+export default function HomePage() { return <Landing />; }

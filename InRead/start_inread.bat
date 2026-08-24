@@ -1,2 +1,2 @@
 @echo off
-powershell -ExecutionPolicy Bypass -File "%~dp0start_inread.ps1"
+call "%~dp0connect_inread.bat"

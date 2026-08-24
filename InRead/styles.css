@@ -181,6 +181,74 @@ a {
   transition: transform 220ms var(--ease-soft), background-color 220ms ease, color 220ms ease, border-color 220ms ease;
 }
 
+.legacy-account-menu {
+  position: relative;
+}
+
+.legacy-account-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 180px;
+  overflow: hidden;
+  padding: 6px 11px 6px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.legacy-avatar {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #dce8df;
+  color: var(--success);
+  font-family: var(--display-font);
+  font-size: 1.02rem;
+}
+
+.legacy-account-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  width: 260px;
+  gap: 9px;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 20px 48px rgba(17, 17, 17, 0.14);
+  color: var(--muted);
+  font-size: 0.84rem;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-5px);
+  transition: opacity 180ms var(--ease-soft), transform 180ms var(--ease-soft);
+}
+
+.legacy-account-menu:hover .legacy-account-popover,
+.legacy-account-menu:focus-within .legacy-account-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.legacy-account-popover strong { color: var(--ink); font-size: 0.98rem; }
+.legacy-account-label { color: var(--success); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.legacy-continue, .legacy-admin-link { padding: 9px 11px; border-radius: 10px; background: var(--surface-soft); color: var(--ink); font-weight: 700; }
+.legacy-admin-link { color: var(--success); }
+.legacy-logout { border: 0; border-radius: 10px; padding: 9px 11px; background: #fff1f1; color: var(--danger); cursor: pointer; font: inherit; font-weight: 800; text-align: left; }
+
 .top-link.active,
 .top-link:hover {
   background: #111111;
