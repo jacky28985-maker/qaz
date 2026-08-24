@@ -8,7 +8,7 @@ if ($existing) {
   exit 0
 }
 
-$forward = "127.0.0.1:$LocalPort`:127.0.0.1:3000"
+$forward = "127.0.0.1:$LocalPort`:127.0.0.1:13000"
 ssh -f -N -L $forward `
   -o ExitOnForwardFailure=yes `
   -o ServerAliveInterval=30 `

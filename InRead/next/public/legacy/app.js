@@ -1525,6 +1525,9 @@ function syncViewportProfile() {
   const width = window.innerWidth;
   const height = window.innerHeight;
   const ratio = width / Math.max(height, 1);
+  // A 16:9 frame becomes vertically constrained on 16:10, 3:2, and short
+  // desktop displays. Let plan-like pages use one predictable page scrollbar.
+  const needsDocumentScroll = width >= 768 && (ratio < 1.68 || height < 820);
   let profile = "desktop-standard";
 
   if (width < 768) {
@@ -1538,6 +1541,7 @@ function syncViewportProfile() {
   }
 
   document.body.dataset.viewportProfile = profile;
+  document.body.dataset.autoScroll = needsDocumentScroll ? "true" : "false";
 }
 
 function defaultState() {
@@ -2463,7 +2467,7 @@ function bindPlanConfigurator() {
 
   const commitPlanDays = () => {
     const snappedDays = clamp(Math.round(Number(slider.value) || 1), 1, Number(slider.max) || 1);
-    slider.value = String(snappedDays);
+    setPlanSliderPosition(slider, snappedDays);
     dayInput.dataset.editing = "false";
     updatePlanSliderValue(snappedDays, { force: true });
     ensurePlanForDays(snappedDays);
@@ -2472,7 +2476,7 @@ function bindPlanConfigurator() {
 
   const restoreCommittedDays = () => {
     const committedDays = clamp(Number(getState().planDays || slider.value || 1), 1, Number(slider.max) || 1);
-    slider.value = String(committedDays);
+    setPlanSliderPosition(slider, committedDays);
     dayInput.dataset.editing = "false";
     updatePlanSliderValue(committedDays, { force: true });
   };
@@ -2485,13 +2489,19 @@ function bindPlanConfigurator() {
     animateSliderToValue(slider, snapped, commitPlanDays);
   };
 
-  slider.addEventListener("pointerdown", () => {
+  slider.addEventListener("pointerdown", (event) => {
     cancelSliderAnimation(slider);
     dayInput.dataset.editing = "false";
     slider.classList.add("is-dragging");
+    try {
+      slider.setPointerCapture?.(event.pointerId);
+    } catch {
+      // Native range controls do not expose pointer capture in every browser.
+    }
   });
 
   slider.addEventListener("input", () => {
+    syncPlanSliderVisual(slider);
     updatePlanSliderValue(Math.round(Number(slider.value)), { force: true });
   });
 
@@ -2609,7 +2619,7 @@ function animateSliderToValue(slider, targetValue, onComplete) {
   const startValue = Number(slider.value) || 1;
   const endValue = Number(targetValue) || startValue;
   if (Math.abs(endValue - startValue) < 0.01) {
-    slider.value = String(endValue);
+    setPlanSliderPosition(slider, endValue);
     onComplete?.();
     return;
   }
@@ -2626,7 +2636,7 @@ function animateSliderToValue(slider, targetValue, onComplete) {
     const eased = progress < 0.5
       ? 4 * progress * progress * progress
       : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-    slider.value = String(startValue + (endValue - startValue) * eased);
+    setPlanSliderPosition(slider, startValue + (endValue - startValue) * eased);
     syncDisplay();
 
     if (progress < 1) {
@@ -2634,13 +2644,32 @@ function animateSliderToValue(slider, targetValue, onComplete) {
       return;
     }
 
-    slider.value = String(endValue);
+    setPlanSliderPosition(slider, endValue);
     syncDisplay();
     delete slider.dataset.animFrame;
     onComplete?.();
   };
 
   slider.dataset.animFrame = String(requestAnimationFrame(tick));
+}
+
+function setPlanSliderPosition(slider, value) {
+  if (!slider) return;
+  const min = Number(slider.min) || 1;
+  const max = Number(slider.max) || min;
+  const nextValue = clamp(Number(value) || min, min, max);
+  // Keep the live control value intact; changing the HTML value attribute during a drag resets Chromium's thumb.
+  slider.value = String(nextValue);
+  syncPlanSliderVisual(slider);
+}
+
+function syncPlanSliderVisual(slider) {
+  if (!slider) return;
+  const min = Number(slider.min) || 1;
+  const max = Number(slider.max) || min;
+  const current = clamp(Number(slider.value) || min, min, max);
+  const percent = max === min ? 100 : ((current - min) / (max - min)) * 100;
+  slider.style.setProperty("--slider-progress", `${percent}%`);
 }
 
 function renderPlanSliderScale(maxDays) {
@@ -2657,6 +2686,18 @@ function updatePlanSliderValue(days, options = {}) {
   if (!sliderValue) return;
   if (!options.force && sliderValue.dataset.editing === "true" && document.activeElement === sliderValue) return;
   sliderValue.value = String(days);
+}
+
+function normalizeStudyState(state) {
+  state.wordRecords = state.wordRecords || {};
+  state.planProgress = state.planProgress || {};
+  state.trainingDay = Number(state.trainingDay) || 0;
+  if (state.studySession && state.studySession.version !== STUDY_ENGINE_VERSION) state.studySession = null;
+  return state;
+}
+
+function isStudyInProgress(state) {
+  return Boolean(state.studySession && state.studySession.version === STUDY_ENGINE_VERSION && !state.studySession.completed);
 }
 
 function getBucketCompletion(bucket, state) {
@@ -2815,9 +2856,11 @@ function renderPlan() {
   const slider = document.getElementById("daysSlider");
   const dayInput = document.getElementById("planSliderValue");
   if (slider) {
+    cancelSliderAnimation(slider);
     slider.min = "1";
     slider.max = String(sliderMax);
-    slider.value = String(clamp(selectedDays, 1, sliderMax));
+    setPlanSliderPosition(slider, clamp(selectedDays, 1, sliderMax));
+    requestAnimationFrame(() => setPlanSliderPosition(slider, clamp(getState().planDays || selectedDays, 1, sliderMax)));
   }
   if (dayInput) {
     dayInput.min = "1";

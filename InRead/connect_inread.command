@@ -30,6 +30,16 @@ if lsof -nP -iTCP:"${LOCAL_PORT}" -sTCP:LISTEN >/dev/null 2>&1; then
     open "${INREAD_URL}"
     exit 0
   fi
+  stale_pids="$(lsof -t -nP -iTCP:"${LOCAL_PORT}" -sTCP:LISTEN 2>/dev/null || true)"
+  for pid in ${stale_pids}; do
+    if [[ "$(ps -p "${pid}" -o comm= 2>/dev/null)" == *ssh* ]]; then
+      kill "${pid}" 2>/dev/null || true
+    fi
+  done
+  sleep 1
+  if ! lsof -nP -iTCP:"${LOCAL_PORT}" -sTCP:LISTEN >/dev/null 2>&1; then
+    exec "$0"
+  fi
   fail "Port ${LOCAL_PORT} is occupied by a service that is not InRead 2.0. Close it and run this file again."
 fi
 
@@ -50,7 +60,7 @@ echo "Connecting to InRead..."
 nohup ssh -N \
   -i "${SSH_KEY}" \
   -p "${SSH_PORT}" \
-  -L "127.0.0.1:${LOCAL_PORT}:127.0.0.1:3000" \
+  -L "127.0.0.1:${LOCAL_PORT}:127.0.0.1:13000" \
   -o ExitOnForwardFailure=yes \
   -o ServerAliveInterval=30 \
   -o ServerAliveCountMax=3 \

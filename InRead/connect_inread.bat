@@ -27,6 +27,15 @@ if not errorlevel 1 (
     start "" %INREAD_URL%
     exit /b 0
   )
+  rem A previous failed launch may leave an SSH listener behind. Only remove it
+  rem when the owning process is confirmed to be ssh.exe.
+  for /f "tokens=5" %%P in ('netstat -ano -p tcp ^| findstr /r /c:":%LOCAL_PORT% .*LISTENING"') do (
+    tasklist /fi "PID eq %%P" /nh | findstr /i /c:"ssh.exe" >nul
+    if not errorlevel 1 taskkill /pid %%P /t /f >nul 2>nul
+  )
+  ping 127.0.0.1 -n 2 >nul
+  netstat -ano -p tcp | findstr /r /c:":%LOCAL_PORT% .*LISTENING" >nul
+  if errorlevel 1 goto :main
   echo Port %LOCAL_PORT% is occupied by a service that is not InRead 2.0.
   echo Close that service, then run this file again.
   pause
@@ -34,7 +43,7 @@ if not errorlevel 1 (
 )
 
 echo Connecting to InRead...
-start "InRead SSH tunnel" /b ssh.exe -N -L 127.0.0.1:%LOCAL_PORT%:127.0.0.1:3000 -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 snxy-dev
+start "InRead SSH tunnel" /b ssh.exe -N -L 127.0.0.1:%LOCAL_PORT%:127.0.0.1:13000 -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 snxy-dev
 rem ping avoids timeout.exe's input-redirection failure when launched by PowerShell.
 ping 127.0.0.1 -n 4 >nul
 

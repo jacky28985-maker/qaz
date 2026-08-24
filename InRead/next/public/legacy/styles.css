@@ -1188,9 +1188,10 @@ button:disabled {
   width: 100%;
   height: 8px;
   appearance: none;
+  -webkit-appearance: none;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(90deg, #111111 0%, #525252 100%);
+  background: linear-gradient(90deg, var(--accent) 0 var(--slider-progress, 0%), var(--surface-soft) var(--slider-progress, 0%) 100%);
   outline: none;
   padding: 0;
   cursor: grab;
@@ -1201,6 +1202,7 @@ button:disabled {
 
 .days-slider::-webkit-slider-thumb {
   appearance: none;
+  -webkit-appearance: none;
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -1227,7 +1229,7 @@ button:disabled {
 .days-slider::-moz-range-track {
   height: 8px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #111111 0%, #525252 100%);
+  background: linear-gradient(90deg, var(--accent) 0 var(--slider-progress, 0%), var(--surface-soft) var(--slider-progress, 0%) 100%);
 }
 
 .days-slider.is-dragging {
@@ -1403,6 +1405,25 @@ button:disabled {
 body[data-page="plan"] .page,
 body[data-page="study"] .page {
   overflow: hidden;
+}
+
+/* Keep every control reachable on non-16:9 and short desktop screens.
+   The frame stays intact; only its content area becomes the single scrollbar. */
+body[data-auto-scroll="true"][data-page="plan"] .page,
+body[data-auto-scroll="true"][data-page="study"] .page {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+body[data-auto-scroll="true"][data-page="plan"] .plan-overview-column,
+body[data-auto-scroll="true"][data-page="plan"] .plan-map-column,
+body[data-auto-scroll="true"][data-page="study"] .study-main-column,
+body[data-auto-scroll="true"][data-page="study"] .study-side-column,
+body[data-auto-scroll="true"][data-page="plan"] .plan-map-wrap,
+body[data-auto-scroll="true"][data-page="study"] .study-status-wrap {
+  overflow: visible;
+  padding-right: 0;
 }
 
 body[data-page="plan"] .lead.compact,
