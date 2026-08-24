@@ -1935,48 +1935,122 @@ function ensurePlanForDays(days) {
 function bindPlanConfigurator() {
   const slider = document.getElementById("daysSlider");
   const dayInput = document.getElementById("planSliderValue");
-  if (!slider || !dayInput) return;
+  if (!slider || !dayInput || slider.dataset.bound === "true") return;
+  slider.dataset.bound = "true";
+
+  const sanitizeTypedDays = (rawValue, { allowEmpty = false } = {}) => {
+    const sliderMax = Number(slider.max) || 1;
+    const trimmed = String(rawValue ?? "").trim();
+    if (!trimmed) {
+      return allowEmpty ? null : clamp(Number(getState().planDays || slider.value || 1), 1, sliderMax);
+    }
+
+    const parsedValue = Number(trimmed);
+    if (Number.isFinite(parsedValue)) {
+      return clamp(Math.round(parsedValue), 1, sliderMax);
+    }
+
+    const fallbackNumeric = Number.parseFloat(trimmed);
+    if (Number.isFinite(fallbackNumeric)) {
+      return clamp(Math.round(fallbackNumeric), 1, sliderMax);
+    }
+
+    if (trimmed.startsWith("-")) return 1;
+    return sliderMax;
+  };
 
   const commitPlanDays = () => {
-    ensurePlanForDays(Math.round(Number(slider.value)));
+    const snappedDays = clamp(Math.round(Number(slider.value) || 1), 1, Number(slider.max) || 1);
+    slider.value = String(snappedDays);
+    dayInput.dataset.editing = "false";
+    updatePlanSliderValue(snappedDays, { force: true });
+    ensurePlanForDays(snappedDays);
     renderPlan();
   };
 
-  slider.addEventListener("pointerdown", () => cancelSliderAnimation(slider));
+  const restoreCommittedDays = () => {
+    const committedDays = clamp(Number(getState().planDays || slider.value || 1), 1, Number(slider.max) || 1);
+    slider.value = String(committedDays);
+    dayInput.dataset.editing = "false";
+    updatePlanSliderValue(committedDays, { force: true });
+  };
 
-  slider.addEventListener("input", () => {
-    updatePlanSliderValue(Math.round(Number(slider.value)));
+  const finishSliderDrag = () => {
+    if (!slider.classList.contains("is-dragging")) return;
+    slider.classList.remove("is-dragging");
+    const snapped = clamp(Math.round(Number(slider.value) || 1), 1, Number(slider.max) || 1);
+    updatePlanSliderValue(snapped, { force: true });
+    animateSliderToValue(slider, snapped, commitPlanDays);
+  };
+
+  slider.addEventListener("pointerdown", () => {
+    cancelSliderAnimation(slider);
+    dayInput.dataset.editing = "false";
+    slider.classList.add("is-dragging");
   });
 
-  slider.addEventListener("change", commitPlanDays);
-  slider.addEventListener("mouseup", commitPlanDays);
-  slider.addEventListener("touchend", commitPlanDays, { passive: true });
+  slider.addEventListener("input", () => {
+    updatePlanSliderValue(Math.round(Number(slider.value)), { force: true });
+  });
+
+  slider.addEventListener("change", finishSliderDrag);
+  slider.addEventListener("pointerup", finishSliderDrag);
+  slider.addEventListener("pointercancel", finishSliderDrag);
+  slider.addEventListener("lostpointercapture", finishSliderDrag);
   slider.addEventListener("keyup", (event) => {
     if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(event.key)) {
-      commitPlanDays();
+      const snapped = clamp(Math.round(Number(slider.value) || 1), 1, Number(slider.max) || 1);
+      updatePlanSliderValue(snapped, { force: true });
+      animateSliderToValue(slider, snapped, commitPlanDays);
     }
   });
 
   const commitTypedDays = () => {
-    const sliderMax = Number(slider.max) || 1;
-    const nextDays = clamp(Math.round(Number(dayInput.value) || 1), 1, sliderMax);
-    updatePlanSliderValue(nextDays);
+    const nextDays = sanitizeTypedDays(dayInput.value);
+    if (nextDays == null) {
+      restoreCommittedDays();
+      return;
+    }
+
+    dayInput.dataset.editing = "false";
+    updatePlanSliderValue(nextDays, { force: true });
     animateSliderToValue(slider, nextDays, commitPlanDays);
   };
+
+  const previewTypedDays = () => {
+    dayInput.dataset.editing = "true";
+    const nextDays = sanitizeTypedDays(dayInput.value, { allowEmpty: true });
+    if (nextDays == null) return;
+
+    updatePlanSliderValue(nextDays, { force: true });
+    animateSliderToValue(slider, nextDays);
+  };
+
+  dayInput.addEventListener("focus", () => {
+    dayInput.dataset.editing = "true";
+    dayInput.select();
+  });
+  dayInput.addEventListener("input", previewTypedDays);
 
   dayInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
       commitTypedDays();
-      dayInput.blur();
     }
     if (event.key === "Escape") {
       event.preventDefault();
-      updatePlanSliderValue(Number(getState().planDays || slider.value || 1));
+      restoreCommittedDays();
       dayInput.blur();
     }
   });
-  dayInput.addEventListener("blur", commitTypedDays);
+  dayInput.addEventListener("blur", () => {
+    if (dayInput.dataset.editing === "true") {
+      commitTypedDays();
+      return;
+    }
+
+    restoreCommittedDays();
+  });
   dayInput.addEventListener("change", commitTypedDays);
 }
 
@@ -2040,11 +2114,18 @@ function animateSliderToValue(slider, targetValue, onComplete) {
 
   const duration = Math.min(520, 160 + Math.abs(endValue - startValue) * 22);
   const startTime = performance.now();
+  const syncDisplay = () => {
+    const displayValue = clamp(Math.round(Number(slider.value) || endValue), 1, Number(slider.max) || 1);
+    updatePlanSliderValue(displayValue);
+  };
 
   const tick = (now) => {
     const progress = Math.min((now - startTime) / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
+    const eased = progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
     slider.value = String(startValue + (endValue - startValue) * eased);
+    syncDisplay();
 
     if (progress < 1) {
       slider.dataset.animFrame = String(requestAnimationFrame(tick));
@@ -2052,6 +2133,7 @@ function animateSliderToValue(slider, targetValue, onComplete) {
     }
 
     slider.value = String(endValue);
+    syncDisplay();
     delete slider.dataset.animFrame;
     onComplete?.();
   };
@@ -2068,9 +2150,10 @@ function renderPlanSliderScale(maxDays) {
     .join("");
 }
 
-function updatePlanSliderValue(days) {
+function updatePlanSliderValue(days, options = {}) {
   const sliderValue = document.getElementById("planSliderValue");
   if (!sliderValue) return;
+  if (!options.force && sliderValue.dataset.editing === "true" && document.activeElement === sliderValue) return;
   sliderValue.value = String(days);
 }
 
@@ -2096,7 +2179,7 @@ function renderPlan() {
     dayInput.max = String(sliderMax);
   }
   renderPlanSliderScale(sliderMax);
-  updatePlanSliderValue(selectedDays);
+  updatePlanSliderValue(selectedDays, { force: true });
   document.getElementById("planSliderHint").textContent = planCopy.sliderHint;
   document.getElementById("planSummary").textContent = total
     ? translate(planCopy.summary, {
