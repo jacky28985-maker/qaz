@@ -1040,6 +1040,20 @@ const STATIC_COPY = {
         "#planListEyebrow": "Daily checklist"
       }
     },
+    study: {
+      title: "InRead | Trainer",
+      text: {
+        ".brand-line": "Read the book in front of you, not a giant word list.",
+        "#studyRotateEyebrow": "Tablet note",
+        "#studyRotateTitle": "Please rotate to landscape",
+        "#studyRotateCopy": "Landscape gives the trainer prompt, choices, and progress panel more room. Phone portrait still works normally.",
+        "#studyPageEyebrow": "Vocabulary trainer",
+        "#studyStatusEyebrow": "Training status"
+      },
+      placeholder: {
+        "#studySpellInput": "Type the English word"
+      }
+    },
     gate: {
       title: "InRead | Reading Access",
       text: {
@@ -1175,6 +1189,20 @@ const STATIC_COPY = {
         "#planListEyebrow": "每日清单"
       }
     },
+    study: {
+      title: "InRead | 训练",
+      text: {
+        ".brand-line": "不背海量词，只读眼前书",
+        "#studyRotateEyebrow": "平板使用提示",
+        "#studyRotateTitle": "建议旋转到横屏",
+        "#studyRotateCopy": "横屏时训练卡、选项区和进度栏会更完整。手机纵向仍可正常使用。",
+        "#studyPageEyebrow": "背词训练",
+        "#studyStatusEyebrow": "训练状态"
+      },
+      placeholder: {
+        "#studySpellInput": "输入英文单词"
+      }
+    },
     gate: {
       title: "InRead | 阅读资格",
       text: {
@@ -1226,6 +1254,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (page === "test") initTestPage();
   if (page === "result") initResultPage();
   if (page === "plan") initPlanPage();
+  if (page === "study") initStudyPage();
   if (page === "gate") initGatePage();
 
   if (!getStoredLanguage()) showLanguageModal();
@@ -1404,6 +1433,7 @@ function defaultState() {
     plan: [],
     planDays: 7,
     completion: [],
+    studySession: null,
     gateUnlocked: false,
     directChallenge: false,
     readerProfile: null,
@@ -1464,6 +1494,7 @@ function createFreshState(book, currentState = getState()) {
     plan: [],
     planDays: 7,
     completion: [],
+    studySession: null,
     gateUnlocked: false,
     directChallenge: false
   };
@@ -1604,6 +1635,34 @@ function initPlanPage() {
   bindPlanConfigurator();
   document.getElementById("backToResult").addEventListener("click", () => go("result"));
   document.getElementById("gotoGate").addEventListener("click", () => go("gate"));
+  document.getElementById("planGrid").addEventListener("click", (event) => {
+    const button = event.target instanceof Element ? event.target.closest("[data-start-day]") : null;
+    if (!button) return;
+    startStudyDay(Number(button.dataset.startDay));
+  });
+  document.getElementById("startTodayStudy")?.addEventListener("click", () => {
+    const activeDay = getActivePlanDay(getState());
+    if (activeDay) startStudyDay(activeDay);
+  });
+}
+
+function initStudyPage() {
+  const state = getState();
+  if (!state.selectedBook || !state.result || !state.plan.length) {
+    go("plan");
+    return;
+  }
+
+  if (!state.studySession || state.studySession.bookId !== state.selectedBook.id) {
+    const activeDay = getActivePlanDay(state);
+    if (!activeDay) {
+      go("gate");
+      return;
+    }
+    startStudyDay(activeDay, { navigate: false });
+  }
+
+  renderStudy();
 }
 
 function initGatePage() {
@@ -2194,6 +2253,7 @@ function generatePlanFromResult() {
   state.planDays = state.planDays || 7;
   state.plan = [];
   state.completion = [];
+  state.studySession = null;
   state.directChallenge = false;
   state.gateUnlocked = false;
   setState(state);
@@ -2225,6 +2285,7 @@ function ensurePlanForDays(days) {
   state.planDays = safeDays;
   state.plan = distributePlan(planWords, safeDays);
   state.completion = state.completion.filter((word) => plannedWordSet.has(word));
+  state.studySession = null;
   state.directChallenge = false;
   state.gateUnlocked = state.plan.length > 0 && state.completion.length === planWords.length;
   setState(state);
