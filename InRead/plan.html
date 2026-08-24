@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InRead | Plan</title>
+  <link rel="stylesheet" href="styles.css?v=14">
+</head>
+<body data-page="plan">
+  <div class="rotate-notice">
+    <div class="rotate-notice-card">
+      <div class="eyebrow" id="planRotateEyebrow">Tablet note</div>
+      <h3 id="planRotateTitle" style="margin-top: 16px;">Please rotate to landscape</h3>
+      <p id="planRotateCopy" class="lead compact">Landscape shows more of the day-by-day checklist at once, which is better for steady review.</p>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <div class="frame">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">InRead Prototype</span>
+          <div class="brand-line">Read the book in front of you, not a giant word list.</div>
+        </div>
+        <div class="topbar-meta header-actions">
+          <button class="top-link lang-toggle" type="button" data-language-toggle>EN</button>
+          <a class="top-link" data-top-link="library" href="library.html">Full Library</a>
+        </div>
+      </header>
+
+      <main class="page">
+        <section class="card">
+          <span class="eyebrow" id="planPageEyebrow">Study plan</span>
+          <h2 id="planTitle">Do the minimum useful prep, then return to real reading.</h2>
+          <p id="planLead" class="lead compact">
+            This plan is not here to drag you back into mass memorization. It only targets the words that most interfere with this book, then pushes you back into the text.
+          </p>
+
+          <div class="plan-builder-card">
+            <div class="plan-builder-head">
+              <strong id="planSliderTitle">Choose how many days you want to train</strong>
+              <input id="planSliderValue" class="day-badge plan-slider-value-input" type="number" min="1" max="30" step="1" value="7" inputmode="numeric" aria-label="Plan days">
+            </div>
+            <input id="daysSlider" class="days-slider" type="range" min="1" max="30" step="1" value="7">
+            <div id="planSliderScale" class="plan-slider-scale">
+              <span>1</span>
+              <span>7</span>
+              <span>14</span>
+              <span>21</span>
+              <span>30</span>
+            </div>
+            <p id="planSliderHint" class="foot-note">When you stop sliding, InRead recalculates the pacing, daily word count, and estimated study time.</p>
+          </div>
+
+          <div class="stats-grid plan-stats-grid">
+            <div class="stat-box">
+              <strong id="planWordCount">0</strong>
+              <span id="planWordLabel">Words to review</span>
+            </div>
+            <div class="stat-box">
+              <strong id="planDayCount">0</strong>
+              <span id="planDayLabel">Training days</span>
+            </div>
+            <div class="stat-box">
+              <strong id="planDailyWordCount">0</strong>
+              <span id="planDailyWordLabel">Words per day</span>
+            </div>
+            <div class="stat-box">
+              <strong id="planDailyTime">0 min</strong>
+              <span id="planTimeLabel">Study time per day</span>
+            </div>
+          </div>
+
+          <div class="quote-box" style="margin-top: 18px;">
+            <strong id="planRoleTitle">What this page is for</strong>
+            <p id="planRoleCopy" class="word-meta">It is only a bridge. Its job is to remove the most important reading barriers, not to replace reading itself.</p>
+            <p id="planSummary" class="word-meta" style="margin-top: 12px;">At this pace, the plan summary will appear here.</p>
+          </div>
+
+          <div class="small-actions button-row">
+            <button id="backToResult" class="ghost-btn" type="button">Back to result</button>
+            <button id="gotoGate" class="secondary-btn" type="button">View reading access</button>
+          </div>
+        </section>
+
+        <aside class="card soft">
+          <span class="eyebrow" id="planListEyebrow">Daily checklist</span>
+          <div id="planGrid" class="plan-grid"></div>
+        </aside>
+      </main>
+    </div>
+  </div>
+
+  <script src="app.js?v=14"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InRead | Result</title>
+  <link rel="stylesheet" href="styles.css?v=14">
+</head>
+<body data-page="result">
+  <div class="rotate-notice">
+    <div class="rotate-notice-card">
+      <div class="eyebrow" id="resultRotateEyebrow">Tablet note</div>
+      <h3 id="resultRotateTitle" style="margin-top: 16px;">Please rotate to landscape</h3>
+      <p id="resultRotateCopy" class="lead compact">Landscape makes the result overview and unknown-word list easier to scan. Phone portrait still works normally.</p>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <div class="frame">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">InRead Prototype</span>
+          <div class="brand-line">Read the book in front of you, not a giant word list.</div>
+        </div>
+        <div class="topbar-meta header-actions">
+          <button class="top-link lang-toggle" type="button" data-language-toggle>EN</button>
+          <a class="top-link" data-top-link="library" href="library.html">Full Library</a>
+        </div>
+      </header>
+
+      <main class="page">
+        <section class="card">
+          <span class="eyebrow" id="resultPageEyebrow">Recommendation result</span>
+          <h2 id="resultTitle">How much vocabulary friction still stands between you and this book?</h2>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <strong id="resultUnknownTotal">0</strong>
+              <span id="resultUnknownLabel">Unknown words in this book</span>
+            </div>
+            <div class="stat-box">
+              <strong id="resultLevel">L1</strong>
+              <span id="resultLevelLabel">Current level</span>
+            </div>
+            <div class="stat-box">
+              <strong id="resultVerdict">等待结果</strong>
+              <span id="resultVerdictLabel">System recommendation</span>
+            </div>
+          </div>
+
+          <div id="levelDescription" class="status-note">Your level explanation will appear here.</div>
+
+          <div class="quote-box" style="margin-top: 18px;">
+            <strong id="resultConceptTitle">Product principle</strong>
+            <p id="resultPhilosophy" class="word-meta">The goal is not to hand you a longer word list. The goal is to shorten the distance between "test finished" and "reading begins."</p>
+          </div>
+
+          <div class="stack" style="margin-top: 20px;">
+            <button id="planButton" class="primary-btn result-plan-btn" type="button">Create reading plan</button>
+            <div class="button-row">
+              <button id="restartButton" class="ghost-btn" type="button">Run test again</button>
+              <button id="directReadButton" class="secondary-btn hidden" type="button">Go straight to reading access</button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="card soft">
+          <span class="eyebrow" id="resultListEyebrow">Unknown-word list</span>
+          <div id="unknownWordList" class="word-list"></div>
+        </aside>
+      </main>
+    </div>
+  </div>
+
+  <script src="app.js?v=14"></script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InRead | Search</title>
+  <link rel="stylesheet" href="styles.css?v=14">
+</head>
+<body data-page="search">
+  <div class="rotate-notice">
+    <div class="rotate-notice-card">
+      <div class="eyebrow" id="searchRotateEyebrow">Tablet note</div>
+      <h3 id="searchRotateTitle" style="margin-top: 16px;">Please rotate to landscape</h3>
+      <p id="searchRotateCopy" class="lead compact">This prototype is optimized for 16:9 desktop screens and phone portrait layouts. If you are on a tablet, landscape will give you the full composition.</p>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <div class="frame">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">InRead Prototype</span>
+          <div class="brand-line">Read the book in front of you, not a giant word list.</div>
+        </div>
+        <div class="topbar-meta header-actions">
+          <button class="top-link lang-toggle" type="button" data-language-toggle>EN</button>
+          <a class="top-link" data-top-link="library" href="library.html" id="searchLibraryLink">Full Library</a>
+        </div>
+      </header>
+
+      <main class="page search-page">
+        <section class="card hero-card">
+          <div class="hero-script" aria-hidden="true">
+            <span class="hero-script-line hero-script-line-left">不背海量词</span>
+            <span class="hero-script-line hero-script-line-right">只读眼前书</span>
+          </div>
+
+          <span class="eyebrow" id="searchHeroEyebrow">Find the right book</span>
+          <h1 id="searchHeroTitle" class="search-hero-title"></h1>
+          <p class="lead" id="searchHeroLead">
+            InRead stands against isolated memorization. We only surface the words that truly block the book in front of you,
+            clear the smallest useful set, and send you back into authentic reading as quickly as possible.
+          </p>
+
+          <div class="journey-flow">
+            <div class="journey-step">
+              <span class="journey-index">01</span>
+              <strong id="journeyStep1Title">Find a book</strong>
+              <span id="journeyStep1Copy">Search by title and jump straight into the matching path.</span>
+            </div>
+            <div class="journey-line"></div>
+            <div class="journey-step">
+              <span class="journey-index">02</span>
+              <strong id="journeyStep2Title">Check the barrier</strong>
+              <span id="journeyStep2Copy">Test only the words that matter for this specific book.</span>
+            </div>
+            <div class="journey-line"></div>
+            <div class="journey-step">
+              <span class="journey-index">03</span>
+              <strong id="journeyStep3Title">Return to reading</strong>
+              <span id="journeyStep3Copy">Use minimal prep, then learn the rest inside the text itself.</span>
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div class="mini-card">
+              <strong id="searchMiniCard1Title">Book-specific diagnosis</strong>
+              <span id="searchMiniCard1Copy">We do not estimate your whole-life vocabulary first. We ask whether you are ready for this one book.</span>
+            </div>
+            <div class="mini-card">
+              <strong id="searchMiniCard2Title">Minimal preparation</strong>
+              <span id="searchMiniCard2Copy">Only fix the words that truly interrupt comprehension, instead of rebuilding a detached word list.</span>
+            </div>
+            <div class="mini-card">
+              <strong id="searchMiniCard3Title">Back to the text</strong>
+              <span id="searchMiniCard3Copy">The real learning happens while reading, not in an endless memorization loop outside the book.</span>
+            </div>
+          </div>
+
+          <div class="stack" style="margin-top: 28px;">
+            <div class="input-stack">
+              <div class="input-row search-row">
+              <input id="bookInput" type="text" placeholder="Type a book title, for example The Great Gatsby">
+              <button id="searchButton" class="primary-btn" type="button">Search</button>
+              </div>
+              <div id="searchSuggestions" class="search-suggestions hidden"></div>
+            </div>
+            <div id="sampleChips" class="pill-list"></div>
+            <p id="searchFootnote" class="foot-note">Type to get live fuzzy suggestions. Click a suggestion to go straight into that book's test, or press Enter / Search to open the full library results page.</p>
+          </div>
+        </section>
+
+        <aside id="bookPreview" class="card soft"></aside>
+      </main>
+    </div>
+  </div>
+
+  <script src="app.js?v=14"></script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InRead | Library</title>
+  <link rel="stylesheet" href="styles.css?v=14">
+</head>
+<body data-page="library">
+  <div class="rotate-notice">
+    <div class="rotate-notice-card">
+      <div class="eyebrow" id="libraryRotateEyebrow">Tablet note</div>
+      <h3 id="libraryRotateTitle" style="margin-top: 16px;">Please rotate to landscape</h3>
+      <p id="libraryRotateCopy" class="lead compact">Landscape gives the library filters and recommendation cards more room. Phone portrait still works normally.</p>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <div class="frame">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">InRead Library</span>
+          <div class="brand-line">Browse by tag, reading level, and fit.</div>
+        </div>
+        <div class="topbar-meta library-meta">
+          <div class="input-stack library-search-stack">
+            <div class="input-row library-search-row">
+              <input id="librarySearchInput" type="text" placeholder="Search by title, author, or tag">
+              <button id="librarySearchButton" class="primary-btn" type="button">Search</button>
+            </div>
+            <div id="librarySuggestions" class="search-suggestions hidden"></div>
+          </div>
+          <div class="header-actions">
+            <button class="top-link lang-toggle" type="button" data-language-toggle>EN</button>
+            <a class="top-link" data-top-link="search" href="search.html" id="libraryHomeLink">Home</a>
+          </div>
+        </div>
+      </header>
+
+      <main class="page single library-page">
+        <section class="card library-hero">
+          <div class="library-hero-copy">
+            <span class="eyebrow" id="libraryHeroEyebrow">Library</span>
+            <h2 id="libraryHeading">Full Library</h2>
+            <p id="librarySummary" class="lead compact">Search, filter, and compare books using your past test profile and current reading goal.</p>
+          </div>
+          <aside id="libraryProfileCard" class="card soft library-profile-card"></aside>
+        </section>
+
+        <section class="card library-filter-card">
+          <div class="library-filter-head">
+            <strong id="libraryFilterTitle">Filter by tag</strong>
+            <span id="libraryFilterCopy" class="word-meta">Tags narrow the shelf quickly, while the color bar shows how well each book fits you right now.</span>
+          </div>
+          <div id="tagFilters" class="filter-chip-row"></div>
+        </section>
+
+        <section class="library-results-wrap">
+          <div id="libraryResults" class="library-results-grid"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="app.js?v=14"></script>
+</body>
+</html>

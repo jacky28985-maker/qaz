@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InRead | Test</title>
+  <link rel="stylesheet" href="styles.css?v=14">
+</head>
+<body data-page="test">
+  <div class="rotate-notice">
+    <div class="rotate-notice-card">
+      <div class="eyebrow" id="testRotateEyebrow">Tablet note</div>
+      <h3 id="testRotateTitle" style="margin-top: 16px;">Please rotate to landscape</h3>
+      <p id="testRotateCopy" class="lead compact">Landscape gives the test card and status panel more room. Phone portrait still works normally.</p>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <div class="frame">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">InRead Prototype</span>
+          <div class="brand-line">Read the book in front of you, not a giant word list.</div>
+        </div>
+        <div class="topbar-meta header-actions">
+          <button class="top-link lang-toggle" type="button" data-language-toggle>EN</button>
+          <a class="top-link" data-top-link="library" href="library.html">Full Library</a>
+        </div>
+      </header>
+
+      <main class="page">
+        <section class="card word-panel">
+          <div>
+            <span class="eyebrow" id="testPageEyebrow">Readiness test</span>
+            <h2 id="testBookTitle">尚未开始测试</h2>
+            <p id="testIntro" class="lead compact">
+              This page diagnoses instead of teaching. Starting from medium-difficulty book words, it quickly estimates your reading boundary through "know" / "not sure" decisions.
+            </p>
+            <div class="progress">
+              <div id="progressFill" class="progress-fill"></div>
+            </div>
+          </div>
+
+          <div>
+            <span id="difficultyBadge" class="eyebrow">Waiting to start</span>
+            <div id="currentWord" class="word">InRead</div>
+            <p id="wordHint" class="word-meta">Meanings stay hidden by default so the diagnosis stays honest, instead of slipping back into "read the explanation first, then say I know it."</p>
+          </div>
+
+          <div>
+            <p id="adaptiveNote" class="foot-note">A "know" answer moves upward, while "not sure" moves downward. The goal is to find your boundary with fewer prompts.</p>
+            <div class="answer-row" style="margin-top: 18px;">
+              <button id="knowButton" class="primary-btn" type="button">I know it</button>
+              <button id="dontKnowButton" class="secondary-btn" type="button">Not sure</button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="card soft">
+          <span class="eyebrow" id="testStatusEyebrow">Test status</span>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <strong id="askedCount">0</strong>
+              <span id="testAskedLabel">Answered</span>
+            </div>
+            <div class="stat-box">
+              <strong id="knownCount">0</strong>
+              <span id="testKnownLabel">Known</span>
+            </div>
+            <div class="stat-box">
+              <strong id="unknownCount">0</strong>
+              <span id="testUnknownLabel">Unknown</span>
+            </div>
+          </div>
+
+          <div class="quote-box" style="margin-top: 18px;">
+            <strong id="testWhyTitle">Why keep this page minimal?</strong>
+            <p id="testWhyCopy" class="word-meta">Because the job here is to locate friction, not to teach every word immediately. First diagnose honestly, then keep only the most valuable words for the next step.</p>
+          </div>
+
+          <div class="small-actions button-row">
+            <button id="backToSearch" class="ghost-btn" type="button">Back to search</button>
+          </div>
+        </aside>
+      </main>
+    </div>
+  </div>
+
+  <script src="app.js?v=14"></script>
+</body>
+</html>

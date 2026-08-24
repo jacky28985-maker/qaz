@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InRead | Reading Access</title>
+  <link rel="stylesheet" href="styles.css?v=14">
+</head>
+<body data-page="gate">
+  <div class="rotate-notice">
+    <div class="rotate-notice-card">
+      <div class="eyebrow" id="gateRotateEyebrow">Tablet note</div>
+      <h3 id="gateRotateTitle" style="margin-top: 16px;">Please rotate to landscape</h3>
+      <p id="gateRotateCopy" class="lead compact">Landscape makes the reading-access state and explanation cards easier to inspect. Phone portrait still works normally.</p>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <div class="frame">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">InRead Prototype</span>
+          <div class="brand-line">Read the book in front of you, not a giant word list.</div>
+        </div>
+        <div class="topbar-meta header-actions">
+          <button class="top-link lang-toggle" type="button" data-language-toggle>EN</button>
+          <a class="top-link" data-top-link="library" href="library.html">Full Library</a>
+        </div>
+      </header>
+
+      <main class="page">
+        <section class="card">
+          <span class="eyebrow" id="gatePageEyebrow">Reading access</span>
+          <div id="gateStateLabel" class="state-text">Locked</div>
+          <p id="gateMessage" class="lead compact">Finish the book-specific test first, then decide whether minimal prep is needed. The final goal is always to get you back into real reading faster.</p>
+
+          <div class="stats-grid">
+            <div class="stat-box">
+              <strong id="gateReasonLabel">Waiting for test</strong>
+              <span id="gateStageLabel">Current stage</span>
+            </div>
+            <div class="stat-box">
+              <strong id="gateActionLabel">Start the test</strong>
+              <span id="gateNextActionLabel">Next action</span>
+            </div>
+            <div class="stat-box">
+              <strong id="gateBookLabel">No book selected</strong>
+              <span id="gateBookStatLabel">Target book</span>
+            </div>
+          </div>
+
+          <div class="quote-box" style="margin-top: 18px;">
+            <strong id="gatePrincipleTitle">Product principle</strong>
+            <p id="gatePrincipleCopy" class="word-meta">We are not trying to build another digital word book. We want the smallest possible preparation that sends readers back into the original text, where vocabulary can keep growing naturally.</p>
+          </div>
+
+          <div class="small-actions button-row">
+            <button id="backToSearch" class="ghost-btn" type="button">Choose another book</button>
+            <button id="backToPlan" class="secondary-btn hidden" type="button">Back to plan</button>
+          </div>
+        </section>
+
+        <aside class="card soft">
+          <span class="eyebrow" id="gateGuideEyebrow">Reading-state guide</span>
+          <div id="gateGuideList" class="stack" style="margin-top: 18px;"></div>
+        </aside>
+      </main>
+    </div>
+  </div>
+
+  <script src="app.js?v=14"></script>
+</body>
+</html>
