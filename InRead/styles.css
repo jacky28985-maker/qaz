@@ -1687,6 +1687,21 @@ body[data-viewport-profile="desktop-compact"] .step:hover {
     grid-template-columns: 1fr;
   }
 
+  body[data-page="plan"] .page,
+  body[data-page="study"] .page {
+    overflow: auto;
+  }
+
+  .plan-overview-column,
+  .plan-map-column,
+  .study-main-column,
+  .study-side-column,
+  .plan-map-wrap,
+  .study-status-wrap {
+    overflow: visible;
+    padding-right: 0;
+  }
+
   .study-choice-grid {
     grid-template-columns: 1fr;
   }
