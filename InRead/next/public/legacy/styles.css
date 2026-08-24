@@ -7,6 +7,9 @@
   --line: #e8e8e4;
   --line-strong: #dadad5;
   --accent: #111111;
+  --on-accent: #ffffff;
+  --page-bg: linear-gradient(180deg, #fbfbf9 0%, #f2f2ef 100%);
+  --topbar-bg: rgba(255, 255, 255, 0.92);
   --success: #1f6a43;
   --warning: #8a6500;
   --danger: #b43b3b;
@@ -24,6 +27,82 @@
   --script-font: "Snell Roundhand", "Segoe Script", "Brush Script MT", "Lucida Handwriting", cursive;
 }
 
+html[data-theme="dark"] {
+  --bg: #151917;
+  --surface: #1d211e;
+  --surface-soft: #262c28;
+  --ink: #f0f3ee;
+  --muted: #b4beb5;
+  --line: #38433b;
+  --line-strong: #566459;
+  --accent: #4f805a;
+  --on-accent: #ffffff;
+  --success: #81c694;
+  --warning: #d8b85e;
+  --danger: #ef8e8e;
+  --shadow: 0 28px 80px rgba(0, 0, 0, 0.32);
+  --frame-border: rgba(235, 245, 235, 0.12);
+  --page-bg: radial-gradient(circle at 84% 0%, #26392d 0%, transparent 35rem), linear-gradient(180deg, #161a17 0%, #101310 100%);
+  --topbar-bg: rgba(29, 33, 30, 0.92);
+}
+
+html[data-theme="pink"] {
+  --bg: #fcecf3;
+  --surface: #fffafd;
+  --surface-soft: #fff3f8;
+  --ink: #3a2632;
+  --muted: #795b67;
+  --line: #efd2df;
+  --line-strong: #dfa9bf;
+  --accent: #8d455f;
+  --on-accent: #fff8fb;
+  --success: #9a4f6e;
+  --warning: #9c6c25;
+  --danger: #b34861;
+  --shadow: 0 28px 80px rgba(107, 48, 74, 0.1);
+  --frame-border: rgba(107, 48, 74, 0.1);
+  --page-bg: radial-gradient(circle at 84% 0%, #f7c9db 0, transparent 34rem), linear-gradient(180deg, #fff8fb 0%, #fbe4ee 100%);
+  --topbar-bg: rgba(255, 250, 253, 0.9);
+}
+
+html[data-theme="blue"] {
+  --bg: #eaf4fd;
+  --surface: #fbfdff;
+  --surface-soft: #f1f8ff;
+  --ink: #203248;
+  --muted: #5a718b;
+  --line: #cfe0f2;
+  --line-strong: #a9c9e5;
+  --accent: #274e75;
+  --on-accent: #f8fbff;
+  --success: #356f9d;
+  --warning: #8b6a25;
+  --danger: #b34e62;
+  --shadow: 0 28px 80px rgba(42, 92, 135, 0.1);
+  --frame-border: rgba(42, 92, 135, 0.1);
+  --page-bg: radial-gradient(circle at 84% 0%, #c7e4fa 0, transparent 34rem), linear-gradient(180deg, #fbfdff 0%, #e6f2fd 100%);
+  --topbar-bg: rgba(251, 253, 255, 0.9);
+}
+
+html[data-theme="aurora"] {
+  --bg: #090a13;
+  --surface: rgba(21, 24, 39, 0.92);
+  --surface-soft: rgba(31, 35, 57, 0.9);
+  --ink: #f4f5ff;
+  --muted: #c0c4df;
+  --line: rgba(187, 198, 255, 0.22);
+  --line-strong: rgba(187, 198, 255, 0.36);
+  --accent: #7a62bc;
+  --on-accent: #ffffff;
+  --success: #9bd7e9;
+  --warning: #d4bd73;
+  --danger: #ff9bad;
+  --shadow: 0 28px 80px rgba(0, 0, 0, 0.44);
+  --frame-border: rgba(198, 204, 255, 0.18);
+  --page-bg: radial-gradient(circle at 18% 8%, rgba(74, 118, 255, 0.34), transparent 28rem), radial-gradient(circle at 84% 18%, rgba(245, 79, 135, 0.26), transparent 30rem), radial-gradient(circle at 50% 100%, rgba(126, 81, 255, 0.24), transparent 34rem), #090a13;
+  --topbar-bg: rgba(20, 22, 37, 0.86);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -37,11 +116,12 @@ body {
 
 body {
   font-family: var(--sans-font);
-  background: linear-gradient(180deg, #fbfbf9 0%, #f2f2ef 100%);
+  background: var(--page-bg);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   font-synthesis-weight: none;
+  transition: background .35s ease, color .25s ease;
 }
 
 button,
@@ -114,13 +194,15 @@ a {
 }
 
 .topbar {
+  position: relative;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 18px;
   padding: 22px 28px;
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--topbar-bg);
   backdrop-filter: blur(18px);
 }
 
@@ -131,6 +213,8 @@ a {
 }
 
 .header-actions {
+  position: relative;
+  z-index: 110;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -185,6 +269,16 @@ a {
   position: relative;
 }
 
+/* Bridge the visual gap so the account menu stays open while it is entered. */
+.legacy-account-menu::after {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 260px;
+  height: 12px;
+  content: "";
+}
+
 .legacy-account-chip {
   display: inline-flex;
   align-items: center;
@@ -219,7 +313,7 @@ a {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  z-index: 20;
+  z-index: 120;
   display: grid;
   width: 260px;
   gap: 9px;
@@ -251,10 +345,19 @@ a {
 
 .top-link.active,
 .top-link:hover {
-  background: #111111;
-  border-color: #111111;
-  color: #ffffff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
 }
+
+.theme-toggle { width: 42px; padding-inline: 0; line-height: 1; }
+.theme-dot { width: 15px; height: 15px; display: block; margin: auto; border: 1px solid rgba(17,17,17,.25); border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 2px rgba(255,255,255,.5); }.theme-toggle[data-theme-choice="dark"] .theme-dot { background: #141714; border-color: #4a564b; }.theme-toggle[data-theme-choice="pink"] .theme-dot { background: #f1a9c2; border-color: #d27a9b; }.theme-toggle[data-theme-choice="blue"] .theme-dot { background: #9dc9ed; border-color: #6da3d0; }.theme-toggle[data-theme-choice="aurora"] .theme-dot { border-color: #a0a8ff; background: radial-gradient(circle at 25% 22%, #6aa9ff, transparent 35%), radial-gradient(circle at 70% 30%, #f46f9d, transparent 42%), #38296d; }
+.theme-easter-toast { position: fixed; top: 86px; right: clamp(18px, 4vw, 64px); z-index: 220; display: grid; width: 240px; gap: 5px; padding: 15px 38px 15px 16px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); box-shadow: var(--shadow); color: var(--muted); font-size: .82rem; }.theme-easter-toast strong { color: var(--ink); }.theme-easter-toast button { position: absolute; top: 8px; right: 10px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 1.12rem; }
+
+html[data-theme="dark"] .rotate-notice { background: rgba(15, 18, 16, 0.94); }
+html[data-theme="dark"] .legacy-avatar { background: #294435; }
+html[data-theme="dark"] .legacy-logout { background: #422727; }
+html[data-theme="dark"] .card, html[data-theme="dark"] .library-card, html[data-theme="dark"] .day-card, html[data-theme="dark"] .plan-day-details[open] summary { background: var(--surface); }
 
 .step {
   padding: 8px 12px;

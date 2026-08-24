@@ -37,7 +37,7 @@ function createAdmin() {
     createdAt: new Date().toISOString(),
     lastLoginAt: null,
     lastLoginIp: null,
-    profile: { level: "未测试", learningState: {} }
+    profile: { level: "未测试", learningState: {}, appearance: { theme: null, easterEggUnlocked: false } }
   };
 }
 
@@ -72,7 +72,7 @@ export function publicUser(user) {
     createdAt: user.createdAt,
     lastLoginAt: user.lastLoginAt,
     lastLoginIp: user.lastLoginIp,
-    profile: user.profile || { level: "未测试", learningState: {} }
+    profile: user.profile || { level: "未测试", learningState: {}, appearance: { theme: null, easterEggUnlocked: false } }
   };
 }
 

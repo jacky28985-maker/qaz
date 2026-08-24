@@ -1,6 +1,7 @@
 (() => {
   let queuedState = null;
   let syncTimer = null;
+  let accountUser = null;
 
   async function hydrate() {
     const response = await fetch("/api/profile", { credentials: "same-origin" });
@@ -9,13 +10,15 @@
       throw new Error("UNAUTHORIZED");
     }
     const { user } = await response.json();
+    accountUser = user;
     const savedState = user.profile?.learningState;
     if (savedState && typeof savedState === "object" && Object.keys(savedState).length) {
       sessionStorage.setItem("inread-state", JSON.stringify(savedState));
     }
-    window.addEventListener("DOMContentLoaded", () => {
+    const mountMenu = () => {
       const actions = document.querySelector(".header-actions");
       if (!actions) return;
+      if (actions.querySelector(".legacy-account-menu")) return;
       const state = user.profile?.learningState || {};
       const learned = state.completion?.length || 0;
       const menu = document.createElement("div");
@@ -35,7 +38,15 @@
         window.location.assign("/");
       });
       actions.appendChild(menu);
-    });
+    };
+
+    // hydrate() can finish after DOMContentLoaded, so mount immediately in that case.
+    if (document.readyState === "loading") {
+      window.addEventListener("DOMContentLoaded", mountMenu, { once: true });
+    } else {
+      mountMenu();
+    }
+    return user;
   }
 
   function saveState(state) {
@@ -52,8 +63,22 @@
     }, 700);
   }
 
-  window.addEventListener("pagehide", () => { if (queuedState) saveState(queuedState); });
-  window.InReadAccount = { ready: hydrate(), saveState };
+  async function flushState(state) {
+    const nextState = state || queuedState;
+    if (!nextState) return;
+    queuedState = nextState;
+    clearTimeout(syncTimer);
+    await fetch("/api/profile", {
+      method: "PATCH",
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ learningState: nextState }),
+      keepalive: true
+    }).catch(() => {});
+  }
+
+  window.addEventListener("pagehide", () => { flushState(); });
+  window.InReadAccount = { ready: hydrate(), saveState, flushState, getUser: () => accountUser };
 
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[character]);

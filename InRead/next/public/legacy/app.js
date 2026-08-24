@@ -1,5 +1,9 @@
 const DEFAULT_LANGUAGE = "en";
 const LANGUAGE_STORAGE_KEY = "inread-language";
+const THEME_STORAGE_KEY = "inread-theme";
+const THEME_EGG_STORAGE_KEY = "inread-theme-easter-egg";
+const BASE_THEMES = ["light", "dark", "pink", "blue"];
+const ALL_THEMES = [...BASE_THEMES, "aurora"];
 const UNKNOWN_THRESHOLD = 24;
 const HIGH_FREQUENCY_LIMIT = 12;
 const SUGGESTION_LIMIT = 5;
@@ -1236,6 +1240,9 @@ const STATIC_COPY = {
 };
 
 let currentLanguage = DEFAULT_LANGUAGE;
+let currentTheme = "light";
+let easterEggUnlocked = false;
+let themeClickStreak = 0;
 
 const SEARCH_HERO_TITLE_LINES = {
   en: [
@@ -1252,10 +1259,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   await window.InReadAccount?.ready;
   const page = document.body.dataset.page;
   currentLanguage = getStoredLanguage() || DEFAULT_LANGUAGE;
+  const appearance = window.InReadAccount?.getUser?.()?.profile?.appearance;
+  easterEggUnlocked = Boolean(appearance?.easterEggUnlocked || getStoredThemeUnlocked());
+  currentTheme = isThemeAvailable(appearance?.theme, easterEggUnlocked)
+    ? appearance.theme
+    : (isThemeAvailable(getStoredTheme(), easterEggUnlocked) ? getStoredTheme() : getSystemTheme());
+  applyTheme(currentTheme);
   syncViewportProfile();
   applyStaticCopy(page);
   renderPageDecorations(page);
   bindLanguageControls();
+  renderThemeControls();
+  bindThemeControls();
   renderGlobalNav(page);
 
   if (page === "search") initSearchPage();
@@ -1295,6 +1310,59 @@ function setStoredLanguage(language) {
   } catch {
     void language;
   }
+}
+
+function getStoredTheme() {
+  try {
+    const stored = globalThis.localStorage?.getItem(THEME_STORAGE_KEY);
+    return ALL_THEMES.includes(stored) ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function getStoredThemeUnlocked() {
+  try {
+    return globalThis.localStorage?.getItem(THEME_EGG_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function isThemeAvailable(theme, unlocked) {
+  return BASE_THEMES.includes(theme) || (theme === "aurora" && unlocked);
+}
+
+function getSystemTheme() {
+  return globalThis.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function applyTheme(theme) {
+  currentTheme = theme;
+  document.documentElement.dataset.theme = theme;
+}
+
+function setStoredTheme(theme) {
+  try {
+    globalThis.localStorage?.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    void theme;
+  }
+}
+
+function persistThemePreference(theme, unlocked) {
+  setStoredTheme(theme);
+  try {
+    globalThis.localStorage?.setItem(THEME_EGG_STORAGE_KEY, unlocked ? "1" : "0");
+  } catch {
+    void unlocked;
+  }
+  fetch("/api/profile", {
+    method: "PATCH",
+    credentials: "same-origin",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ appearance: { theme, easterEggUnlocked: unlocked } })
+  }).catch(() => {});
 }
 
 function getCopy() {
@@ -1376,6 +1444,47 @@ function bindLanguageControls() {
       window.location.reload();
     });
   });
+}
+
+function renderThemeControls() {
+  document.querySelectorAll("[data-language-toggle]").forEach((languageButton) => {
+    if (languageButton.parentElement?.querySelector("[data-theme-toggle]")) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "top-link theme-toggle";
+    button.dataset.themeToggle = "true";
+    button.dataset.themeChoice = currentTheme;
+    button.setAttribute("aria-label", "切换网站主题");
+    button.title = "切换网站主题";
+    button.innerHTML = '<span class="theme-dot" aria-hidden="true"></span>';
+    languageButton.insertAdjacentElement("afterend", button);
+  });
+}
+
+function bindThemeControls() {
+  document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+    button.addEventListener("click", () => {
+      themeClickStreak += 1;
+      const justUnlocked = !easterEggUnlocked && themeClickStreak >= 10;
+      easterEggUnlocked = easterEggUnlocked || justUnlocked;
+      const themes = easterEggUnlocked ? ALL_THEMES : BASE_THEMES;
+      const nextTheme = justUnlocked ? "aurora" : themes[(themes.indexOf(currentTheme) + 1) % themes.length];
+      applyTheme(nextTheme);
+      persistThemePreference(nextTheme, easterEggUnlocked);
+      button.dataset.themeChoice = nextTheme;
+      if (justUnlocked) showThemeEasterNotice();
+    });
+  });
+}
+
+function showThemeEasterNotice() {
+  if (document.querySelector(".theme-easter-toast")) return;
+  const toast = document.createElement("div");
+  toast.className = "theme-easter-toast";
+  toast.setAttribute("role", "status");
+  toast.innerHTML = '<strong>恭喜你触发彩蛋</strong><span>现在可以切换彩蛋背景。</span><button type="button" aria-label="关闭提示">×</button>';
+  toast.querySelector("button").addEventListener("click", () => toast.remove());
+  document.body.appendChild(toast);
 }
 
 function showLanguageModal() {
@@ -1487,7 +1596,16 @@ function normalizeResult(result) {
 function go(page, params = {}) {
   const filteredEntries = Object.entries(params).filter(([, value]) => value !== "" && value !== null && value !== undefined);
   const query = new URLSearchParams(filteredEntries).toString();
-  window.location.href = `${page}.html${query ? `?${query}` : ""}`;
+  const target = `${page}.html${query ? `?${query}` : ""}`;
+  const navigate = () => { window.location.href = target; };
+  const flushState = window.InReadAccount?.flushState;
+
+  // The next legacy page hydrates from the account record, so save before leaving.
+  if (flushState) {
+    flushState(getState()).finally(navigate);
+  } else {
+    navigate();
+  }
 }
 
 function createFreshState(book, currentState = getState()) {

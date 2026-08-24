@@ -32,6 +32,20 @@ export async function PATCH(request) {
     user.profile.learningState = body.learningState;
     user.profile.level = body.learningState.readerProfile?.level || body.learningState.result?.level || user.profile.level || "未测试";
   }
+  if (body.appearance !== undefined && typeof body.appearance === "object" && body.appearance !== null) {
+    const allowedThemes = new Set(["light", "dark", "pink", "blue", "aurora"]);
+    const theme = body.appearance.theme;
+    const easterEggUnlocked = body.appearance.easterEggUnlocked;
+    if (!allowedThemes.has(theme)) return NextResponse.json({ error: "主题设置无效。" }, { status: 400 });
+    if (theme === "aurora" && easterEggUnlocked !== true && !user.profile?.appearance?.easterEggUnlocked) {
+      return NextResponse.json({ error: "请先解锁彩蛋背景。" }, { status: 403 });
+    }
+    user.profile = user.profile || {};
+    user.profile.appearance = {
+      theme,
+      easterEggUnlocked: Boolean(user.profile.appearance?.easterEggUnlocked || easterEggUnlocked)
+    };
+  }
   writeStore(store);
   return NextResponse.json({ user: publicUser(user) });
 }
