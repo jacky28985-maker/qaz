@@ -1,0 +1,15 @@
+{
+  "thread_id": "01a032f8-58e1-7821-b3fc-39cce4639c82",
+  "local_root": "/Users/tigersmacbook/Documents/AI学院/Grammar",
+  "exports_dir": "/Users/tigersmacbook/Documents/AI学院/Grammar/exports",
+  "state_dir": "/Users/tigersmacbook/Documents/AI学院/Grammar/.state",
+  "repo_url": "https://github.com/jacky28985-maker/qaz.git",
+  "repo_dir": "/Users/tigersmacbook/Documents/AI学院/Grammar/.state/repo",
+  "git_proxy": "http://127.0.0.1:1082",
+  "main_branch": "main",
+  "main_folder": "The using of AI",
+  "inread_branch": "InRead",
+  "inread_folder": "Grammar",
+  "git_user_name": "Tiger-icc",
+  "git_user_email": "320391002+Tiger-icc@users.noreply.github.com"
+}

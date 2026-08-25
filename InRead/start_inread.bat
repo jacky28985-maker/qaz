@@ -1,2 +1,3 @@
 @echo off
-powershell -ExecutionPolicy Bypass -File "%~dp0start_inread.ps1"
+rem InRead 2.0 entry point. It opens the login-enabled product homepage.
+call "%~dp0connect_inread.bat"

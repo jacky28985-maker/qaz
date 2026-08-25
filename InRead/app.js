@@ -3,6 +3,7 @@ const LANGUAGE_STORAGE_KEY = "inread-language";
 const UNKNOWN_THRESHOLD = 24;
 const HIGH_FREQUENCY_LIMIT = 12;
 const SUGGESTION_LIMIT = 5;
+const STUDY_CARD_TYPES = ["zh_to_en_choice", "en_to_zh_choice", "zh_to_en_spell", "scene_to_en_choice", "scene_to_zh_choice"];
 
 const MATCH_FILL_CLASS = {
   relaxed: "match-fill-easy",
@@ -328,6 +329,218 @@ const BOOK_COPY = {
   }
 };
 
+const WORD_GLOSSARY = {
+  "abrupt": "突然的",
+  "accomplished": "熟练的",
+  "affability": "亲切",
+  "ambrosia": "神食",
+  "amiable": "和蔼的",
+  "amiably": "和善地",
+  "apprehensive": "忧虑的",
+  "assignment": "任务",
+  "astonished": "惊讶的",
+  "astonishment": "惊讶",
+  "barn": "谷仓",
+  "betrayal": "背叛",
+  "bewildered": "困惑的",
+  "bewilderment": "困惑",
+  "bewitched": "着迷的",
+  "bravery": "勇敢",
+  "briskly": "轻快地",
+  "burglary": "入室盗窃",
+  "camouflage": "伪装",
+  "capacity": "容量",
+  "carnage": "大屠杀",
+  "cavern": "洞穴",
+  "certainty": "确定",
+  "civility": "礼貌",
+  "cleverness": "聪明",
+  "companion": "同伴",
+  "composure": "镇定",
+  "conceit": "自负",
+  "conceited": "自负的",
+  "conspicuous": "显眼的",
+  "contented": "满足的",
+  "countenance": "面容",
+  "courageous": "勇敢的",
+  "current": "水流",
+  "cynical": "愤世嫉俗的",
+  "dazzling": "耀眼的",
+  "decorum": "礼仪",
+  "defeated": "被击败的",
+  "delicate": "精致的",
+  "delightful": "令人愉快的",
+  "despair": "绝望",
+  "determined": "坚定的",
+  "dignity": "尊严",
+  "disconcerting": "令人不安的",
+  "disdain": "轻蔑",
+  "dread": "恐惧",
+  "drift": "漂流",
+  "dwarves": "矮人",
+  "earnest": "认真的",
+  "elation": "欣喜",
+  "elegance": "优雅",
+  "enchanted": "被施了魔法的",
+  "endure": "忍受",
+  "falter": "踌躇",
+  "feigned": "假装的",
+  "felicity": "幸福",
+  "forbidden": "被禁止的",
+  "formidable": "强大的",
+  "fragment": "碎片",
+  "frail": "脆弱的",
+  "fret": "烦恼",
+  "frightened": "害怕的",
+  "furtive": "鬼鬼祟祟的",
+  "fury": "狂怒",
+  "gaudy": "花哨的",
+  "gaunt": "消瘦的",
+  "gently": "轻柔地",
+  "gleaming": "闪亮的",
+  "glimmer": "微光",
+  "gloomy": "阴沉的",
+  "glorious": "辉煌的",
+  "goblin": "小妖精",
+  "grim": "严峻的",
+  "grimace": "鬼脸",
+  "groan": "呻吟",
+  "groggy": "昏沉的",
+  "grotesque": "怪诞的",
+  "gulf": "海湾",
+  "harpoon": "鱼叉",
+  "hauteur": "傲慢",
+  "heedlessly": "漫不经心地",
+  "hesitate": "犹豫",
+  "hook": "钩子",
+  "hover": "盘旋",
+  "humble": "谦逊的",
+  "humiliation": "羞辱",
+  "immortal": "不朽的",
+  "impenetrable": "无法穿透的",
+  "impertinent": "无礼的",
+  "indignant": "愤慨的",
+  "indolent": "懒散的",
+  "inevitable": "不可避免的",
+  "inexhaustible": "无穷无尽的",
+  "insinuate": "暗示",
+  "intangible": "无形的",
+  "integrity": "正直",
+  "intricate": "复杂精巧的",
+  "invisible": "看不见的",
+  "languid": "慵懒的",
+  "lavish": "奢侈的",
+  "lightning": "闪电",
+  "linger": "逗留",
+  "lonesome": "孤单的",
+  "lurked": "潜伏着",
+  "lurking": "潜伏的",
+  "marlin": "枪鱼",
+  "mast": "桅杆",
+  "meadow": "草地",
+  "melancholy": "忧郁的",
+  "memory": "记忆",
+  "minotaur": "牛头怪",
+  "mischief": "恶作剧",
+  "mischievous": "淘气的",
+  "mortification": "羞愧",
+  "murmur": "低语",
+  "mutter": "咕哝",
+  "muttered": "咕哝着",
+  "mythological": "神话的",
+  "nebulous": "模糊的",
+  "nurturer": "养育者",
+  "oblige": "帮忙",
+  "obscure": "模糊的",
+  "ominous": "不祥的",
+  "opulent": "富丽堂皇的",
+  "oracle": "神谕",
+  "partiality": "偏爱",
+  "peculiar": "奇怪的",
+  "perilous": "危险的",
+  "plunder": "掠夺",
+  "precision": "精确",
+  "privation": "匮乏",
+  "prophecy": "预言",
+  "propriety": "得体",
+  "quest": "探索",
+  "radiance": "光辉",
+  "radiant": "容光焕发的",
+  "reassuring": "令人安心的",
+  "reckless": "鲁莽的",
+  "release": "释放",
+  "reluctant": "不情愿的",
+  "remarkable": "非凡的",
+  "resentment": "怨恨",
+  "resilient": "有韧性的",
+  "resolve": "决心",
+  "respect": "尊重",
+  "respectable": "体面的",
+  "restless": "不安的",
+  "retrieve": "取回",
+  "riddle": "谜语",
+  "rigid": "僵硬的",
+  "riotous": "喧闹的",
+  "ritual": "仪式",
+  "sail": "船帆",
+  "salutations": "问候",
+  "sameness": "千篇一律",
+  "scarce": "稀少的",
+  "serene": "宁静的",
+  "shamefaced": "羞愧的",
+  "shark": "鲨鱼",
+  "shattered": "粉碎的",
+  "shiver": "发抖",
+  "shovel": "铲子",
+  "shuddered": "战栗着",
+  "sincere": "真诚的",
+  "skiff": "小艇",
+  "smoldering": "阴燃的",
+  "snarled": "怒吼着",
+  "soaring": "高飞的",
+  "solemn": "庄重的",
+  "solemnity": "庄重",
+  "solicitude": "关切",
+  "splendid": "极好的",
+  "staggered": "摇晃的",
+  "steady": "稳定的",
+  "sting": "刺痛",
+  "strange": "奇怪的",
+  "subtle": "微妙的",
+  "suffering": "痛苦",
+  "supercilious": "傲慢的",
+  "taut": "绷紧的",
+  "temper": "脾气",
+  "tenderly": "温柔地",
+  "terrific": "极好的",
+  "threshold": "门槛",
+  "thunderous": "雷鸣般的",
+  "torrent": "激流",
+  "towering": "高耸的",
+  "transcend": "超越",
+  "transfixed": "呆住的",
+  "transgression": "越轨",
+  "transmit": "传递",
+  "tremendous": "巨大的",
+  "trident": "三叉戟",
+  "triumph": "胜利",
+  "trough": "食槽",
+  "tumult": "骚动",
+  "underworld": "冥界",
+  "unexpected": "出乎意料的",
+  "unsettling": "令人不安的",
+  "urgent": "紧急的",
+  "vexation": "恼火",
+  "victory": "胜利",
+  "vigilance": "警觉",
+  "vivid": "生动的",
+  "weary": "疲惫的",
+  "weird": "古怪的",
+  "whispering": "低语的",
+  "wizardry": "魔法",
+  "wretched": "凄惨的"
+};
+
 const COPY = {
   en: {
     modal: {
@@ -453,8 +666,55 @@ const COPY = {
       summaryEmpty: "Move the slider to generate a pacing summary for this book.",
       minutes: ({ minutes }) => `${minutes} min`,
       done: "Mastered",
-      markDone: "Mark as mastered",
-      taskMeta: ({ chapter, frequency, difficulty }) => `Around chapter ${chapter} / Frequency ${frequency} / Difficulty ${difficulty}`
+      taskMeta: ({ chapter, frequency, difficulty }) => `Around chapter ${chapter} / Frequency ${frequency} / Difficulty ${difficulty}`,
+      startToday: "Start today's training",
+      continueToday: "Continue today's training",
+      completedDay: "Completed",
+      activeDay: "Today",
+      lockedDay: "Locked for now",
+      progress: ({ done, total }) => `${done}/${total} mastered`,
+      rule: "Each word must pass at least 3 rounds. Missed words return sooner.",
+      mapTitle: "Training map",
+      viewWords: "View word list",
+      hideWords: "Hide word list"
+    },
+    study: {
+      progress: ({ mastered, total }) => `${mastered}/${total} words ready today`,
+      roundsLabel: "Rounds completed",
+      masteredLabel: "Mastered today",
+      leftLabel: "Still in rotation",
+      masteryRuleTitle: "Why this trainer repeats words",
+      masteryRuleCopy: "Every word must survive at least three correct passes. Wrong answers re-enter sooner, so weak words stay visible without turning the whole plan into mass memorization.",
+      questionHint: "Stay with the book-specific clue. This trainer only exists to clear the words that block the current text.",
+      typeLabels: {
+        zh_to_en_choice: "Chinese -> English",
+        en_to_zh_choice: "English -> Chinese",
+        zh_to_en_spell: "Chinese -> Spelling",
+        scene_to_en_choice: "Scene -> English",
+        scene_to_zh_choice: "Scene -> Chinese"
+      },
+      promptLabels: {
+        zh_to_en_choice: "Choose the English word that matches this Chinese hint.",
+        en_to_zh_choice: "Choose the best Chinese meaning for this English word.",
+        zh_to_en_spell: "Type the English word that matches this Chinese hint.",
+        scene_to_en_choice: "Use the visual cue and choose the matching English word.",
+        scene_to_zh_choice: "Use the visual cue and choose the matching Chinese meaning."
+      },
+      inputPlaceholder: "Type the English word",
+      submit: "Submit",
+      backToPlan: "Back to plan",
+      gotoGate: "View reading access",
+      checklistTitle: "Today's checklist",
+      completeTitle: "Today's words are ready",
+      completeCopy: "Each word in this set has survived the minimum number of review rounds. You can return to the plan, unlock the next day, or move toward reading access if the full plan is complete.",
+      currentDay: ({ day }) => `Day ${day} training`,
+      targetBook: "Target book",
+      sceneTitle: "Visual cue",
+      sceneLabel: ({ gloss }) => `A scene about "${gloss}"`,
+      correct: ({ word, gloss }) => `Correct. "${word}" matches “${gloss}”. It can move farther away in the queue now.`,
+      incorrect: ({ word, gloss }) => `Not quite. "${word}" means “${gloss}”. It will return sooner.`,
+      spellSuccess: ({ word, gloss }) => `Correct. You typed "${word}" for “${gloss}”.`,
+      spellMiss: ({ word, gloss }) => `The spelling should be "${word}". It means “${gloss}”, and it will return again soon.`
     },
     gate: {
       locked: "Locked",
@@ -601,8 +861,55 @@ const COPY = {
       summaryEmpty: "拖动天数条后，这里会显示本书的节奏摘要。",
       minutes: ({ minutes }) => `${minutes} 分钟`,
       done: "已掌握",
-      markDone: "标记已掌握",
-      taskMeta: ({ chapter, frequency, difficulty }) => `第 ${chapter} 章附近 / 频次 ${frequency} / 难度 ${difficulty}`
+      taskMeta: ({ chapter, frequency, difficulty }) => `第 ${chapter} 章附近 / 频次 ${frequency} / 难度 ${difficulty}`,
+      startToday: "开始今天训练",
+      continueToday: "继续今天训练",
+      completedDay: "已完成",
+      activeDay: "今日任务",
+      lockedDay: "暂未解锁",
+      progress: ({ done, total }) => `已掌握 ${done}/${total}`,
+      rule: "每个词至少要答对 3 轮；答错的词会更快回流。",
+      mapTitle: "训练日程",
+      viewWords: "查看词单",
+      hideWords: "收起词单"
+    },
+    study: {
+      progress: ({ mastered, total }) => `今日已掌握 ${mastered}/${total} 个词`,
+      roundsLabel: "已训练轮次",
+      masteredLabel: "今日已掌握",
+      leftLabel: "仍在回流",
+      masteryRuleTitle: "为什么这里会重复出词",
+      masteryRuleCopy: "每个词至少要通过三次正确回忆才算过关。答错的词会更快回流，所以系统会把薄弱点留在眼前，而不是把整本计划都变成海量背词。",
+      questionHint: "只围绕这本书的关键障碍词训练，目标是更快回到正文。",
+      typeLabels: {
+        zh_to_en_choice: "中文选英文",
+        en_to_zh_choice: "英文选中文",
+        zh_to_en_spell: "中文拼英文",
+        scene_to_en_choice: "看图选英文",
+        scene_to_zh_choice: "看图选中文"
+      },
+      promptLabels: {
+        zh_to_en_choice: "请根据中文提示，选出正确英文。",
+        en_to_zh_choice: "请根据英文单词，选出最贴切的中文。",
+        zh_to_en_spell: "请根据中文提示，拼写出正确英文。",
+        scene_to_en_choice: "请根据视觉提示，选出对应英文。",
+        scene_to_zh_choice: "请根据视觉提示，选出对应中文。"
+      },
+      inputPlaceholder: "输入英文单词",
+      submit: "提交",
+      backToPlan: "返回计划页",
+      gotoGate: "查看阅读资格",
+      checklistTitle: "今日清单",
+      completeTitle: "今天这组词已经过关",
+      completeCopy: "这一组词都已经达到最小复现次数。你可以返回计划页继续解锁后续天数，或者在整份计划结束后进入阅读资格页。",
+      currentDay: ({ day }) => `第 ${day} 天训练`,
+      targetBook: "目标书籍",
+      sceneTitle: "视觉提示",
+      sceneLabel: ({ gloss }) => `一个和“${gloss}”有关的场景`,
+      correct: ({ word, gloss }) => `答对了。“${word}”对应“${gloss}”，它会暂时离开当前队列。`,
+      incorrect: ({ word, gloss }) => `这次不对。“${word}”表示“${gloss}”，它会很快再次出现。`,
+      spellSuccess: ({ word, gloss }) => `拼写正确。“${word}”对应“${gloss}”。`,
+      spellMiss: ({ word, gloss }) => `正确拼写是“${word}”，意思是“${gloss}”，它会很快回流。`
     },
     gate: {
       locked: "锁定中",
@@ -741,6 +1048,20 @@ const STATIC_COPY = {
         "#planListEyebrow": "Daily checklist"
       }
     },
+    study: {
+      title: "InRead | Trainer",
+      text: {
+        ".brand-line": "Read the book in front of you, not a giant word list.",
+        "#studyRotateEyebrow": "Tablet note",
+        "#studyRotateTitle": "Please rotate to landscape",
+        "#studyRotateCopy": "Landscape gives the trainer prompt, choices, and progress panel more room. Phone portrait still works normally.",
+        "#studyPageEyebrow": "Vocabulary trainer",
+        "#studyStatusEyebrow": "Training status"
+      },
+      placeholder: {
+        "#studySpellInput": "Type the English word"
+      }
+    },
     gate: {
       title: "InRead | Reading Access",
       text: {
@@ -876,6 +1197,20 @@ const STATIC_COPY = {
         "#planListEyebrow": "每日清单"
       }
     },
+    study: {
+      title: "InRead | 训练",
+      text: {
+        ".brand-line": "不背海量词，只读眼前书",
+        "#studyRotateEyebrow": "平板使用提示",
+        "#studyRotateTitle": "建议旋转到横屏",
+        "#studyRotateCopy": "横屏时训练卡、选项区和进度栏会更完整。手机纵向仍可正常使用。",
+        "#studyPageEyebrow": "背词训练",
+        "#studyStatusEyebrow": "训练状态"
+      },
+      placeholder: {
+        "#studySpellInput": "输入英文单词"
+      }
+    },
     gate: {
       title: "InRead | 阅读资格",
       text: {
@@ -913,7 +1248,8 @@ const SEARCH_HERO_TITLE_LINES = {
   ]
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await window.InReadAccount?.ready;
   const page = document.body.dataset.page;
   currentLanguage = getStoredLanguage() || DEFAULT_LANGUAGE;
   syncViewportProfile();
@@ -927,6 +1263,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (page === "test") initTestPage();
   if (page === "result") initResultPage();
   if (page === "plan") initPlanPage();
+  if (page === "study") initStudyPage();
   if (page === "gate") initGatePage();
 
   if (!getStoredLanguage()) showLanguageModal();
@@ -1105,6 +1442,7 @@ function defaultState() {
     plan: [],
     planDays: 7,
     completion: [],
+    studySession: null,
     gateUnlocked: false,
     directChallenge: false,
     readerProfile: null,
@@ -1133,6 +1471,7 @@ function setState(state) {
     nextState.result = normalizeResult(nextState.result);
   }
   sessionStorage.setItem("inread-state", JSON.stringify(nextState));
+  window.InReadAccount?.saveState(nextState);
 }
 
 function normalizeResult(result) {
@@ -1165,6 +1504,7 @@ function createFreshState(book, currentState = getState()) {
     plan: [],
     planDays: 7,
     completion: [],
+    studySession: null,
     gateUnlocked: false,
     directChallenge: false
   };
@@ -1305,6 +1645,34 @@ function initPlanPage() {
   bindPlanConfigurator();
   document.getElementById("backToResult").addEventListener("click", () => go("result"));
   document.getElementById("gotoGate").addEventListener("click", () => go("gate"));
+  document.getElementById("planGrid").addEventListener("click", (event) => {
+    const button = event.target instanceof Element ? event.target.closest("[data-start-day]") : null;
+    if (!button) return;
+    startStudyDay(Number(button.dataset.startDay));
+  });
+  document.getElementById("startTodayStudy")?.addEventListener("click", () => {
+    const activeDay = getActivePlanDay(getState());
+    if (activeDay) startStudyDay(activeDay);
+  });
+}
+
+function initStudyPage() {
+  const state = getState();
+  if (!state.selectedBook || !state.result || !state.plan.length) {
+    go("plan");
+    return;
+  }
+
+  if (!state.studySession || state.studySession.bookId !== state.selectedBook.id) {
+    const activeDay = getActivePlanDay(state);
+    if (!activeDay) {
+      go("gate");
+      return;
+    }
+    startStudyDay(activeDay, { navigate: false });
+  }
+
+  renderStudy();
 }
 
 function initGatePage() {
@@ -1895,6 +2263,7 @@ function generatePlanFromResult() {
   state.planDays = state.planDays || 7;
   state.plan = [];
   state.completion = [];
+  state.studySession = null;
   state.directChallenge = false;
   state.gateUnlocked = false;
   setState(state);
@@ -1907,8 +2276,7 @@ function getPlanWords(state) {
   }
 
   return [...state.unknownWords]
-    .sort((a, b) => b.frequency - a.frequency || a.chapter - b.chapter)
-    .slice(0, HIGH_FREQUENCY_LIMIT);
+    .sort((a, b) => b.frequency - a.frequency || a.chapter - b.chapter);
 }
 
 function getPlanDayLimit(state) {
@@ -1926,6 +2294,7 @@ function ensurePlanForDays(days) {
   state.planDays = safeDays;
   state.plan = distributePlan(planWords, safeDays);
   state.completion = state.completion.filter((word) => plannedWordSet.has(word));
+  state.studySession = null;
   state.directChallenge = false;
   state.gateUnlocked = state.plan.length > 0 && state.completion.length === planWords.length;
   setState(state);
@@ -1935,48 +2304,122 @@ function ensurePlanForDays(days) {
 function bindPlanConfigurator() {
   const slider = document.getElementById("daysSlider");
   const dayInput = document.getElementById("planSliderValue");
-  if (!slider || !dayInput) return;
+  if (!slider || !dayInput || slider.dataset.bound === "true") return;
+  slider.dataset.bound = "true";
+
+  const sanitizeTypedDays = (rawValue, { allowEmpty = false } = {}) => {
+    const sliderMax = Number(slider.max) || 1;
+    const trimmed = String(rawValue ?? "").trim();
+    if (!trimmed) {
+      return allowEmpty ? null : clamp(Number(getState().planDays || slider.value || 1), 1, sliderMax);
+    }
+
+    const parsedValue = Number(trimmed);
+    if (Number.isFinite(parsedValue)) {
+      return clamp(Math.round(parsedValue), 1, sliderMax);
+    }
+
+    const fallbackNumeric = Number.parseFloat(trimmed);
+    if (Number.isFinite(fallbackNumeric)) {
+      return clamp(Math.round(fallbackNumeric), 1, sliderMax);
+    }
+
+    if (trimmed.startsWith("-")) return 1;
+    return sliderMax;
+  };
 
   const commitPlanDays = () => {
-    ensurePlanForDays(Math.round(Number(slider.value)));
+    const snappedDays = clamp(Math.round(Number(slider.value) || 1), 1, Number(slider.max) || 1);
+    slider.value = String(snappedDays);
+    dayInput.dataset.editing = "false";
+    updatePlanSliderValue(snappedDays, { force: true });
+    ensurePlanForDays(snappedDays);
     renderPlan();
   };
 
-  slider.addEventListener("pointerdown", () => cancelSliderAnimation(slider));
+  const restoreCommittedDays = () => {
+    const committedDays = clamp(Number(getState().planDays || slider.value || 1), 1, Number(slider.max) || 1);
+    slider.value = String(committedDays);
+    dayInput.dataset.editing = "false";
+    updatePlanSliderValue(committedDays, { force: true });
+  };
 
-  slider.addEventListener("input", () => {
-    updatePlanSliderValue(Math.round(Number(slider.value)));
+  const finishSliderDrag = () => {
+    if (!slider.classList.contains("is-dragging")) return;
+    slider.classList.remove("is-dragging");
+    const snapped = clamp(Math.round(Number(slider.value) || 1), 1, Number(slider.max) || 1);
+    updatePlanSliderValue(snapped, { force: true });
+    animateSliderToValue(slider, snapped, commitPlanDays);
+  };
+
+  slider.addEventListener("pointerdown", () => {
+    cancelSliderAnimation(slider);
+    dayInput.dataset.editing = "false";
+    slider.classList.add("is-dragging");
   });
 
-  slider.addEventListener("change", commitPlanDays);
-  slider.addEventListener("mouseup", commitPlanDays);
-  slider.addEventListener("touchend", commitPlanDays, { passive: true });
+  slider.addEventListener("input", () => {
+    updatePlanSliderValue(Math.round(Number(slider.value)), { force: true });
+  });
+
+  slider.addEventListener("change", finishSliderDrag);
+  slider.addEventListener("pointerup", finishSliderDrag);
+  slider.addEventListener("pointercancel", finishSliderDrag);
+  slider.addEventListener("lostpointercapture", finishSliderDrag);
   slider.addEventListener("keyup", (event) => {
     if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(event.key)) {
-      commitPlanDays();
+      const snapped = clamp(Math.round(Number(slider.value) || 1), 1, Number(slider.max) || 1);
+      updatePlanSliderValue(snapped, { force: true });
+      animateSliderToValue(slider, snapped, commitPlanDays);
     }
   });
 
   const commitTypedDays = () => {
-    const sliderMax = Number(slider.max) || 1;
-    const nextDays = clamp(Math.round(Number(dayInput.value) || 1), 1, sliderMax);
-    updatePlanSliderValue(nextDays);
+    const nextDays = sanitizeTypedDays(dayInput.value);
+    if (nextDays == null) {
+      restoreCommittedDays();
+      return;
+    }
+
+    dayInput.dataset.editing = "false";
+    updatePlanSliderValue(nextDays, { force: true });
     animateSliderToValue(slider, nextDays, commitPlanDays);
   };
+
+  const previewTypedDays = () => {
+    dayInput.dataset.editing = "true";
+    const nextDays = sanitizeTypedDays(dayInput.value, { allowEmpty: true });
+    if (nextDays == null) return;
+
+    updatePlanSliderValue(nextDays, { force: true });
+    animateSliderToValue(slider, nextDays);
+  };
+
+  dayInput.addEventListener("focus", () => {
+    dayInput.dataset.editing = "true";
+    dayInput.select();
+  });
+  dayInput.addEventListener("input", previewTypedDays);
 
   dayInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       event.preventDefault();
       commitTypedDays();
-      dayInput.blur();
     }
     if (event.key === "Escape") {
       event.preventDefault();
-      updatePlanSliderValue(Number(getState().planDays || slider.value || 1));
+      restoreCommittedDays();
       dayInput.blur();
     }
   });
-  dayInput.addEventListener("blur", commitTypedDays);
+  dayInput.addEventListener("blur", () => {
+    if (dayInput.dataset.editing === "true") {
+      commitTypedDays();
+      return;
+    }
+
+    restoreCommittedDays();
+  });
   dayInput.addEventListener("change", commitTypedDays);
 }
 
@@ -2040,11 +2483,18 @@ function animateSliderToValue(slider, targetValue, onComplete) {
 
   const duration = Math.min(520, 160 + Math.abs(endValue - startValue) * 22);
   const startTime = performance.now();
+  const syncDisplay = () => {
+    const displayValue = clamp(Math.round(Number(slider.value) || endValue), 1, Number(slider.max) || 1);
+    updatePlanSliderValue(displayValue);
+  };
 
   const tick = (now) => {
     const progress = Math.min((now - startTime) / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
+    const eased = progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
     slider.value = String(startValue + (endValue - startValue) * eased);
+    syncDisplay();
 
     if (progress < 1) {
       slider.dataset.animFrame = String(requestAnimationFrame(tick));
@@ -2052,6 +2502,7 @@ function animateSliderToValue(slider, targetValue, onComplete) {
     }
 
     slider.value = String(endValue);
+    syncDisplay();
     delete slider.dataset.animFrame;
     onComplete?.();
   };
@@ -2068,10 +2519,212 @@ function renderPlanSliderScale(maxDays) {
     .join("");
 }
 
-function updatePlanSliderValue(days) {
+function updatePlanSliderValue(days, options = {}) {
   const sliderValue = document.getElementById("planSliderValue");
   if (!sliderValue) return;
+  if (!options.force && sliderValue.dataset.editing === "true" && document.activeElement === sliderValue) return;
   sliderValue.value = String(days);
+}
+
+function getBucketCompletion(bucket, state) {
+  const completed = bucket.tasks.filter((task) => state.completion.includes(task.word)).length;
+  return {
+    completed,
+    total: bucket.tasks.length,
+    done: completed >= bucket.tasks.length
+  };
+}
+
+function getActivePlanDay(state) {
+  const nextBucket = state.plan.find((bucket) => !getBucketCompletion(bucket, state).done);
+  return nextBucket?.day || null;
+}
+
+function startStudyDay(day, options = {}) {
+  const state = getState();
+  const bucket = state.plan.find((item) => item.day === day);
+  const activeDay = getActivePlanDay(state);
+  if (!bucket || !bucket.tasks.length) return;
+  if (activeDay && day > activeDay) return;
+
+  const shouldCreateFresh = !state.studySession
+    || state.studySession.bookId !== state.selectedBook?.id
+    || state.studySession.day !== day
+    || state.studySession.completed;
+
+  state.studySession = shouldCreateFresh
+    ? createStudySession(state.selectedBook.id, day, bucket.tasks)
+    : ensureStudyQuestion(state.studySession, state);
+
+  setState(state);
+
+  if (options.navigate === false) {
+    if (document.body.dataset.page === "study") renderStudy();
+    return;
+  }
+
+  go("study");
+}
+
+function createStudySession(bookId, day, tasks) {
+  const session = {
+    bookId,
+    day,
+    turn: 0,
+    answered: 0,
+    completed: false,
+    lastFeedback: null,
+    currentQuestion: null,
+    cards: tasks.map((task) => ({
+      word: task.word,
+      dueTurn: 0,
+      attempts: 0,
+      correctPasses: 0,
+      wrongCount: 0,
+      mastered: false
+    }))
+  };
+
+  return ensureStudyQuestion(session, getState());
+}
+
+function getStudyRequiredPasses(card) {
+  return 3 + Math.min(card.wrongCount, 3);
+}
+
+function ensureStudyQuestion(session, state) {
+  if (!session || session.completed || session.currentQuestion) return session;
+
+  const nextCard = selectNextStudyCard(session);
+  if (!nextCard) {
+    session.completed = true;
+    return session;
+  }
+
+  const nextType = STUDY_CARD_TYPES[session.turn % STUDY_CARD_TYPES.length];
+  session.currentQuestion = buildStudyQuestion(nextType, nextCard, state, session);
+  return session;
+}
+
+function selectNextStudyCard(session) {
+  const candidates = session.cards
+    .filter((card) => !card.mastered)
+    .sort((left, right) => left.dueTurn - right.dueTurn || left.correctPasses - right.correctPasses || left.wrongCount - right.wrongCount);
+
+  return candidates[0] || null;
+}
+
+function buildStudyQuestion(type, card, state, session) {
+  const studyCopy = getCopy().study;
+  const wordItem = findVocabularyItem(state, card.word);
+  const gloss = getWordGloss(card.word);
+  const poolWords = getStudyPoolWords(state, session.day, card.word);
+
+  if (type === "zh_to_en_choice") {
+    return {
+      type,
+      word: card.word,
+      gloss,
+      answer: card.word,
+      badge: studyCopy.typeLabels[type],
+      prompt: studyCopy.promptLabels[type],
+      headline: gloss,
+      subline: wordItem ? translate(getCopy().plan.taskMeta, wordItem) : "",
+      options: buildChoiceOptions(poolWords, card.word, (word) => word)
+    };
+  }
+
+  if (type === "en_to_zh_choice") {
+    return {
+      type,
+      word: card.word,
+      gloss,
+      answer: gloss,
+      badge: studyCopy.typeLabels[type],
+      prompt: studyCopy.promptLabels[type],
+      headline: card.word,
+      subline: wordItem ? translate(getCopy().plan.taskMeta, wordItem) : "",
+      options: buildChoiceOptions(poolWords, card.word, (word) => getWordGloss(word))
+    };
+  }
+
+  if (type === "zh_to_en_spell") {
+    return {
+      type,
+      word: card.word,
+      gloss,
+      answer: card.word,
+      badge: studyCopy.typeLabels[type],
+      prompt: studyCopy.promptLabels[type],
+      headline: gloss,
+      subline: wordItem ? translate(getCopy().plan.taskMeta, wordItem) : "",
+      inputPlaceholder: studyCopy.inputPlaceholder
+    };
+  }
+
+  return {
+    type,
+    word: card.word,
+    gloss,
+    answer: type === "scene_to_en_choice" ? card.word : gloss,
+    badge: studyCopy.typeLabels[type],
+    prompt: studyCopy.promptLabels[type],
+    visual: {
+      title: studyCopy.sceneTitle,
+      label: translate(studyCopy.sceneLabel, { gloss }),
+      hue: hashWord(card.word)
+    },
+    subline: wordItem ? translate(getCopy().plan.taskMeta, wordItem) : "",
+    options: buildChoiceOptions(
+      poolWords,
+      card.word,
+      (word) => type === "scene_to_en_choice" ? word : getWordGloss(word)
+    )
+  };
+}
+
+function buildChoiceOptions(poolWords, targetWord, labelGetter) {
+  const usedLabels = new Set([labelGetter(targetWord)]);
+  const optionWords = [targetWord];
+
+  shuffleArray(poolWords.filter((word) => word !== targetWord)).forEach((word) => {
+    if (optionWords.length >= 4) return;
+    const label = labelGetter(word);
+    if (usedLabels.has(label)) return;
+    usedLabels.add(label);
+    optionWords.push(word);
+  });
+
+  return shuffleArray(optionWords).map((word) => ({
+    word,
+    value: labelGetter(word),
+    correct: word === targetWord
+  }));
+}
+
+function getStudyPoolWords(state, day, currentWord) {
+  const dayWords = state.plan.find((bucket) => bucket.day === day)?.tasks.map((task) => task.word) || [];
+  const planWords = state.plan.flatMap((bucket) => bucket.tasks.map((task) => task.word));
+  const bookWords = state.selectedBook?.vocabulary?.map((item) => item.word) || [];
+  return [...new Set([currentWord, ...dayWords, ...planWords, ...bookWords])];
+}
+
+function findVocabularyItem(state, word) {
+  return state.selectedBook?.vocabulary?.find((item) => item.word === word) || null;
+}
+
+function getWordGloss(word) {
+  return WORD_GLOSSARY[word] || word;
+}
+
+function getStudyProgressRatio(session) {
+  if (!session.cards.length) return 0;
+  const progress = session.cards.reduce((total, card) => {
+    const required = getStudyRequiredPasses(card);
+    return total + Math.min(card.correctPasses / Math.max(required, 1), 1);
+  }, 0);
+
+  return progress / session.cards.length;
 }
 
 function renderPlan() {
@@ -2083,6 +2736,7 @@ function renderPlan() {
   const dailyWords = total ? Math.ceil(total / Math.max(selectedDays, 1)) : 0;
   const dailyMinutes = estimateMinutesForWords(dailyWords);
   const totalMinutes = estimateMinutesForWords(total);
+  const activeDay = getActivePlanDay(state);
 
   const slider = document.getElementById("daysSlider");
   const dayInput = document.getElementById("planSliderValue");
@@ -2096,7 +2750,7 @@ function renderPlan() {
     dayInput.max = String(sliderMax);
   }
   renderPlanSliderScale(sliderMax);
-  updatePlanSliderValue(selectedDays);
+  updatePlanSliderValue(selectedDays, { force: true });
   document.getElementById("planSliderHint").textContent = planCopy.sliderHint;
   document.getElementById("planSummary").textContent = total
     ? translate(planCopy.summary, {
@@ -2111,59 +2765,262 @@ function renderPlan() {
   document.getElementById("planDayCount").textContent = String(selectedDays);
   document.getElementById("planDailyWordCount").textContent = String(dailyWords);
   document.getElementById("planDailyTime").textContent = translate(planCopy.minutes, { minutes: dailyMinutes });
+  document.getElementById("planRuleCopy").textContent = planCopy.rule;
+
+  const primaryStudyButton = document.getElementById("startTodayStudy");
+  if (primaryStudyButton) {
+    const isContinuing = !!state.studySession && !state.studySession.completed && state.studySession.day === activeDay;
+    primaryStudyButton.textContent = isContinuing ? planCopy.continueToday : planCopy.startToday;
+    primaryStudyButton.disabled = !activeDay;
+  }
 
   const grid = document.getElementById("planGrid");
-  grid.innerHTML = state.plan.map((bucket) => `
-    <div class="day-card">
-      <div class="day-head">
-        <strong>${escapeHtml(translate(planCopy.day, { day: bucket.day }))}</strong>
-        <span class="day-badge">${escapeHtml(translate(planCopy.count, { count: bucket.tasks.length }))}</span>
-      </div>
-      <div class="task-list">
-        ${bucket.tasks.map((task) => `
-          <div class="task">
-            <div class="task-top">
-              <strong>${task.word}</strong>
-              <button type="button" data-word="${task.word}" class="${state.completion.includes(task.word) ? "done" : ""}">
-                ${escapeHtml(state.completion.includes(task.word) ? planCopy.done : planCopy.markDone)}
-              </button>
-            </div>
-            <p class="task-meta">${escapeHtml(translate(planCopy.taskMeta, {
-              chapter: task.chapter,
-              frequency: task.frequency,
-              difficulty: task.difficulty
-            }))}</p>
-            <p class="task-sentence">${escapeHtml(getVocabularySentence(task))}</p>
+  grid.innerHTML = state.plan.map((bucket) => {
+    const bucketStatus = getBucketCompletion(bucket, state);
+    const isActive = activeDay === bucket.day;
+    const isLocked = activeDay !== null && bucket.day > activeDay && !bucketStatus.done;
+    const badgeCopy = bucketStatus.done
+      ? planCopy.completedDay
+      : isActive
+        ? planCopy.activeDay
+        : planCopy.lockedDay;
+
+    return `
+      <div class="day-card day-card-compact ${isActive ? "day-card-active" : ""} ${bucketStatus.done ? "day-card-complete" : ""}">
+        <div class="day-head">
+          <div class="stack" style="gap: 6px;">
+            <strong>${escapeHtml(translate(planCopy.day, { day: bucket.day }))}</strong>
+            <span class="task-meta">${escapeHtml(translate(planCopy.progress, { done: bucketStatus.completed, total: bucketStatus.total }))}</span>
           </div>
-        `).join("")}
+          <div class="day-head-meta">
+            <span class="day-badge">${escapeHtml(translate(planCopy.count, { count: bucket.tasks.length }))}</span>
+            <span class="day-badge ${bucketStatus.done ? "day-badge-strong" : ""}">${escapeHtml(badgeCopy)}</span>
+          </div>
+        </div>
+        ${!isLocked ? `
+          <details class="plan-day-details">
+            <summary>${escapeHtml(planCopy.viewWords)}</summary>
+            <div class="task-list">
+              ${bucket.tasks.map((task) => `
+                <div class="task ${state.completion.includes(task.word) ? "task-complete" : ""}">
+                  <div class="task-top">
+                    <strong>${task.word}</strong>
+                    <span class="task-status-chip ${state.completion.includes(task.word) ? "task-status-chip-done" : ""}">
+                      ${escapeHtml(state.completion.includes(task.word) ? planCopy.done : getWordGloss(task.word))}
+                    </span>
+                  </div>
+                  <p class="task-meta">${escapeHtml(translate(planCopy.taskMeta, {
+                    chapter: task.chapter,
+                    frequency: task.frequency,
+                    difficulty: task.difficulty
+                  }))}</p>
+                </div>
+              `).join("")}
+            </div>
+          </details>
+        ` : ""}
       </div>
+    `;
+  }).join("");
+}
+
+function renderStudy() {
+  const state = getState();
+  if (!state.studySession) {
+    go("plan");
+    return;
+  }
+
+  state.studySession = ensureStudyQuestion(state.studySession, state);
+  setState(state);
+
+  const session = state.studySession;
+  const studyCopy = getCopy().study;
+  const mastered = session.cards.filter((card) => card.mastered).length;
+  const left = session.cards.filter((card) => !card.mastered).length;
+  const progressPercent = Math.round(getStudyProgressRatio(session) * 100);
+
+  document.getElementById("studyTitle").textContent = translate(studyCopy.currentDay, { day: session.day });
+  document.getElementById("studyBookLabel").textContent = state.selectedBook.title;
+  document.getElementById("studyBookStatLabel").textContent = studyCopy.targetBook;
+  document.getElementById("studyProgressCopy").textContent = translate(studyCopy.progress, { mastered, total: session.cards.length });
+  document.getElementById("studyProgressFill").style.width = `${progressPercent}%`;
+  document.getElementById("studyRoundCount").textContent = String(session.answered);
+  document.getElementById("studyMasteredCount").textContent = String(mastered);
+  document.getElementById("studyLeftCount").textContent = String(left);
+  document.getElementById("studyRoundLabel").textContent = studyCopy.roundsLabel;
+  document.getElementById("studyMasteredLabel").textContent = studyCopy.masteredLabel;
+  document.getElementById("studyLeftLabel").textContent = studyCopy.leftLabel;
+  document.getElementById("studyRuleTitle").textContent = studyCopy.masteryRuleTitle;
+  document.getElementById("studyRuleCopy").textContent = studyCopy.masteryRuleCopy;
+  document.getElementById("studyHint").textContent = studyCopy.questionHint;
+  document.getElementById("studyChecklistTitle").textContent = studyCopy.checklistTitle;
+  document.getElementById("studyBackToPlan").textContent = studyCopy.backToPlan;
+  document.getElementById("studyGotoGate").textContent = studyCopy.gotoGate;
+
+  document.getElementById("studyBackToPlan").onclick = () => go("plan");
+  document.getElementById("studyGotoGate").onclick = () => go("gate");
+
+  const feedback = document.getElementById("studyFeedback");
+  if (session.lastFeedback) {
+    feedback.classList.remove("hidden");
+    feedback.textContent = session.lastFeedback.message;
+  } else {
+    feedback.classList.add("hidden");
+    feedback.textContent = "";
+  }
+
+  const surface = document.getElementById("studyQuestionSurface");
+  const answerArea = document.getElementById("studyAnswerArea");
+  const checklist = document.getElementById("studyChecklist");
+  const badge = document.getElementById("studyTypeBadge");
+  const prompt = document.getElementById("studyPrompt");
+  const bucket = state.plan.find((item) => item.day === session.day);
+  checklist.innerHTML = (bucket?.tasks || []).map((task) => `
+    <div class="task ${state.completion.includes(task.word) ? "task-complete" : ""}">
+      <div class="task-top">
+        <strong>${escapeHtml(task.word)}</strong>
+        <span class="task-status-chip ${state.completion.includes(task.word) ? "task-status-chip-done" : ""}">
+          ${escapeHtml(state.completion.includes(task.word) ? getCopy().plan.done : getWordGloss(task.word))}
+        </span>
+      </div>
+      <p class="task-meta">${escapeHtml(translate(getCopy().plan.taskMeta, {
+        chapter: task.chapter,
+        frequency: task.frequency,
+        difficulty: task.difficulty
+      }))}</p>
     </div>
   `).join("");
 
-  grid.querySelectorAll("[data-word]").forEach((button) => {
-    button.addEventListener("click", () => toggleWordComplete(button.dataset.word));
+  if (session.completed || !session.currentQuestion) {
+    badge.textContent = studyCopy.typeLabels.scene_to_en_choice;
+    prompt.textContent = studyCopy.completeTitle;
+    surface.innerHTML = `
+      <div class="study-complete-card">
+        <strong>${escapeHtml(studyCopy.completeTitle)}</strong>
+        <p>${escapeHtml(studyCopy.completeCopy)}</p>
+      </div>
+    `;
+    answerArea.innerHTML = "";
+    return;
+  }
+
+  const question = session.currentQuestion;
+  badge.textContent = question.badge;
+  prompt.textContent = question.prompt;
+  surface.innerHTML = renderStudyQuestionSurface(question);
+  answerArea.innerHTML = renderStudyAnswerArea(question);
+
+  answerArea.querySelectorAll("[data-study-choice]").forEach((button) => {
+    button.addEventListener("click", () => submitStudyAnswer(decodeURIComponent(button.dataset.studyChoice || "")));
   });
+
+  const submitButton = answerArea.querySelector("[data-study-submit]");
+  const spellInput = document.getElementById("studySpellInput");
+  if (submitButton && spellInput) {
+    submitButton.addEventListener("click", () => submitStudyAnswer(spellInput.value));
+    spellInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        submitStudyAnswer(spellInput.value);
+      }
+    });
+    spellInput.focus();
+  }
 }
 
-function toggleWordComplete(word) {
+function renderStudyQuestionSurface(question) {
+  if (question.visual) {
+    return `
+      <div class="study-visual-card" style="--study-hue: ${question.visual.hue};">
+        <div class="study-visual-art">
+          <span class="study-visual-ring"></span>
+          <span class="study-visual-orb"></span>
+          <span class="study-visual-wave"></span>
+        </div>
+        <strong>${escapeHtml(question.visual.title)}</strong>
+        <p>${escapeHtml(question.visual.label)}</p>
+        <span class="task-meta">${escapeHtml(question.subline || "")}</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="study-word-card">
+      <div class="word">${escapeHtml(question.headline)}</div>
+      <p class="word-meta">${escapeHtml(question.subline || "")}</p>
+    </div>
+  `;
+}
+
+function renderStudyAnswerArea(question) {
+  if (question.type === "zh_to_en_spell") {
+    return `
+      <div class="study-spell-row">
+        <input id="studySpellInput" type="text" placeholder="${escapeHtml(question.inputPlaceholder || "")}" autocomplete="off" spellcheck="false">
+        <button class="primary-btn" type="button" data-study-submit>${escapeHtml(getCopy().study.submit)}</button>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="study-choice-grid">
+      ${question.options.map((option) => `
+        <button class="secondary-btn study-choice-btn" type="button" data-study-choice="${encodeURIComponent(option.value)}">
+          ${escapeHtml(option.value)}
+        </button>
+      `).join("")}
+    </div>
+  `;
+}
+
+function submitStudyAnswer(rawAnswer) {
   const state = getState();
-  if (state.completion.includes(word)) {
-    state.completion = state.completion.filter((item) => item !== word);
+  const session = state.studySession;
+  const question = session?.currentQuestion;
+  if (!session || !question) return;
+
+  const card = session.cards.find((item) => item.word === question.word);
+  if (!card) return;
+
+  const normalizedAnswer = normalizeStudyAnswer(rawAnswer);
+  const normalizedExpected = normalizeStudyAnswer(question.answer);
+  const correct = normalizedAnswer === normalizedExpected;
+
+  session.turn += 1;
+  session.answered += 1;
+  card.attempts += 1;
+
+  if (correct) {
+    card.correctPasses += 1;
+    card.dueTurn = session.turn + Math.min(5, 1 + (card.correctPasses * 2));
+    if (card.correctPasses >= getStudyRequiredPasses(card)) {
+      card.mastered = true;
+      if (!state.completion.includes(card.word)) state.completion.push(card.word);
+    }
   } else {
-    state.completion.push(word);
+    card.wrongCount += 1;
+    card.dueTurn = session.turn + 1;
   }
 
-  const total = state.plan.flatMap((bucket) => bucket.tasks).length;
-  if (total > 0 && state.completion.length === total) {
-    state.gateUnlocked = true;
-  }
+  session.lastFeedback = {
+    correct,
+    message: correct
+      ? translate(question.type === "zh_to_en_spell" ? getCopy().study.spellSuccess : getCopy().study.correct, { word: question.word, gloss: question.gloss })
+      : translate(question.type === "zh_to_en_spell" ? getCopy().study.spellMiss : getCopy().study.incorrect, { word: question.word, gloss: question.gloss })
+  };
+  session.currentQuestion = null;
+  session.completed = session.cards.every((item) => item.mastered);
 
+  const totalPlanWords = state.plan.flatMap((bucket) => bucket.tasks).length;
+  state.gateUnlocked = totalPlanWords > 0 && state.completion.length === totalPlanWords;
+  state.studySession = ensureStudyQuestion(session, state);
   setState(state);
-  renderPlan();
+  renderStudy();
+}
 
-  if (total > 0 && state.completion.length === total) {
-    go("gate");
-  }
+function normalizeStudyAnswer(value) {
+  return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 function renderGate() {
@@ -2246,6 +3103,19 @@ function formatVocabRange([min, max]) {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function shuffleArray(items) {
+  const next = [...items];
+  for (let index = next.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [next[index], next[swapIndex]] = [next[swapIndex], next[index]];
+  }
+  return next;
+}
+
+function hashWord(word) {
+  return [...String(word)].reduce((seed, char) => seed + char.charCodeAt(0), 0) % 360;
 }
 
 function escapeHtml(text) {

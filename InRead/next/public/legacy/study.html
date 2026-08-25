@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InRead | Trainer</title>
+  <link rel="stylesheet" href="styles.css?v=31">
+</head>
+<body data-page="study">
+  <div class="rotate-notice">
+    <div class="rotate-notice-card">
+      <div class="eyebrow" id="studyRotateEyebrow">Tablet note</div>
+      <h3 id="studyRotateTitle" style="margin-top: 16px;">Please rotate to landscape</h3>
+      <p id="studyRotateCopy" class="lead compact">Landscape gives the trainer prompt, choices, and progress panel more room. Phone portrait still works normally.</p>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <div class="frame">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">InRead Prototype</span>
+          <div class="brand-line">Read the book in front of you, not a giant word list.</div>
+        </div>
+        <div class="topbar-meta header-actions">
+          <button class="top-link lang-toggle" type="button" data-language-toggle>EN</button>
+          <a class="top-link" data-top-link="library" href="library.html">Full Library</a>
+        </div>
+      </header>
+
+      <main class="page single study-page">
+        <section class="card study-shell">
+          <div>
+            <span class="eyebrow" id="studyPageEyebrow">Vocabulary trainer</span>
+            <h2 id="studyTitle">Day 1 training</h2>
+            <p id="studyProgressCopy" class="lead compact">0/0 words ready today</p>
+            <div class="progress">
+              <div id="studyProgressFill" class="progress-fill"></div>
+            </div>
+          </div>
+
+          <div class="study-main-grid">
+            <div class="study-main-column">
+              <div class="study-stage">
+                <span id="studyTypeBadge" class="eyebrow">Chinese -> English</span>
+                <p id="studyPrompt" class="study-prompt">Choose the English word that matches this Chinese hint.</p>
+                <div id="studyQuestionSurface" class="study-question-surface"></div>
+                <p id="studyHint" class="foot-note">Stay with the book-specific clue. This trainer only exists to clear the words that block the current text.</p>
+              </div>
+
+              <div id="studyAnswerArea" class="stack"></div>
+              <div id="studyFeedback" class="status-note hidden"></div>
+            </div>
+
+            <div class="study-side-column">
+              <div class="study-status-wrap">
+                <span class="eyebrow" id="studyStatusEyebrow">Training status</span>
+                <div class="stats-grid study-stats-grid">
+                  <div class="stat-box">
+                    <strong id="studyRoundCount">0</strong>
+                    <span id="studyRoundLabel">Rounds completed</span>
+                  </div>
+                  <div class="stat-box">
+                    <strong id="studyMasteredCount">0</strong>
+                    <span id="studyMasteredLabel">Mastered today</span>
+                  </div>
+                  <div class="stat-box">
+                    <strong id="studyLeftCount">0</strong>
+                    <span id="studyLeftLabel">Still in rotation</span>
+                  </div>
+                  <div class="stat-box">
+                    <strong id="studyBookLabel">No book selected</strong>
+                    <span id="studyBookStatLabel">Target book</span>
+                  </div>
+                </div>
+
+                <div class="quote-box study-rule-card">
+                  <strong>1 day · 2 days · 4 days</strong>
+                  <p class="word-meta">Three consecutive successful reviews complete this round. A wrong answer resets the count and returns the word to the next training day.</p>
+                </div>
+
+                <div class="small-actions button-row">
+                  <button id="studyExit" class="ghost-btn" type="button">Back to books</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="legacy-auth.js?v=44"></script>
+  <script src="app.js?v=46"></script>
+</body>
+</html>
